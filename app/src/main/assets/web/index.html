@@ -1,0 +1,2856 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>MY CAMPUS BINDER - Digital Study Binder & Lifetime Academic Library</title>
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#4A3525">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="icon" type="image/jpeg" href="./campus_binder_icon.jpg">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <!-- jsPDF Library for exporting notes to PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <!-- Supabase JS Client for Authentication & Cloud Database -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            binder: {
+              cream: '#FBF8F2',
+              card: '#F6F0E6',
+              sand: '#ECE3D4',
+              espresso: '#4A3525',
+              caramel: '#9E7154',
+              gold: '#D4AF37',
+              goldBrass: '#B8860B',
+              text: '#2C241E',
+              subtext: '#6C6057',
+              ruled: '#E2D9CC',
+              margin: '#E57373',
+              terracotta: '#C0705E',
+              sage: '#6E8B74'
+            }
+          },
+          fontFamily: {
+            serif: ['"Playfair Display"', 'Georgia', 'serif'],
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: #FBF8F2;
+      color: #2C241E;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Authentic Binder Paper Styling */
+    .binder-paper-lined {
+      background-color: #FFFDF9;
+      background-image: 
+        linear-gradient(90deg, transparent 46px, rgba(229, 115, 115, 0.45) 46px, rgba(229, 115, 115, 0.45) 48px, transparent 48px),
+        linear-gradient(#E2D9CC 1px, transparent 1px);
+      background-size: 100% 100%, 100% 28px;
+      line-height: 28px;
+    }
+
+    .binder-paper-grid {
+      background-color: #FFFDF9;
+      background-image: 
+        linear-gradient(90deg, transparent 46px, rgba(229, 115, 115, 0.45) 46px, rgba(229, 115, 115, 0.45) 48px, transparent 48px),
+        linear-gradient(#E2D9CC 1px, transparent 1px),
+        linear-gradient(90deg, #E2D9CC 1px, transparent 1px);
+      background-size: 100% 100%, 20px 20px, 20px 20px;
+    }
+
+    .binder-paper-blank {
+      background-color: #FFFDF9;
+      background-image: linear-gradient(90deg, transparent 46px, rgba(229, 115, 115, 0.45) 46px, rgba(229, 115, 115, 0.45) 48px, transparent 48px);
+      background-size: 100% 100%;
+    }
+
+    .binder-paper-cornell {
+      background-color: #FFFDF9;
+      background-image: 
+        linear-gradient(90deg, transparent 90px, rgba(212, 175, 55, 0.5) 90px, rgba(212, 175, 55, 0.5) 92px, transparent 92px),
+        linear-gradient(#E2D9CC 1px, transparent 1px);
+      background-size: 100% 100%, 100% 28px;
+      line-height: 28px;
+    }
+
+    /* Metallic Gold Ring Binder 3D Gutter */
+    .ring-hole {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #ECE3D4;
+      box-shadow: inset 1px 1px 3px rgba(0,0,0,0.3);
+      position: relative;
+    }
+
+    .gold-ring {
+      position: absolute;
+      left: -6px;
+      top: -2px;
+      width: 26px;
+      height: 18px;
+      border: 4px solid #D4AF37;
+      border-right-color: transparent;
+      border-radius: 50%;
+      filter: drop-shadow(1px 2px 2px rgba(0,0,0,0.25));
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #F6F0E6;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #D4AF37;
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body class="bg-binder-cream text-binder-text antialiased selection:bg-binder-sand min-h-screen flex flex-col justify-between">
+
+  <!-- Top App Navigation Bar -->
+  <header class="sticky top-0 z-40 bg-binder-espresso text-white shadow-md border-b border-binder-caramel">
+    <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('home')">
+        <img src="./campus_binder_icon.jpg" alt="Binder Logo" class="w-9 h-9 rounded-xl shadow border border-binder-gold object-cover">
+        <div>
+          <div class="flex items-center space-x-1.5">
+            <h1 class="font-serif font-bold text-base md:text-lg tracking-wide">MY CAMPUS BINDER</h1>
+            <span class="bg-binder-gold text-binder-espresso text-[10px] font-bold px-1.5 py-0.5 rounded">AI</span>
+          </div>
+          <p class="text-[11px] text-gray-300 font-sans">Digital Study Binder & Arsip Seumur Kuliah</p>
+        </div>
+      </div>
+
+      <!-- Right action buttons: Search, Sync, Settings, Auth, and Add MK -->
+      <div class="flex items-center space-x-1.5 md:space-x-2">
+        <button onclick="openSearchModal()" class="p-2 rounded-full hover:bg-white/10 transition text-gray-200" title="Pencarian Catatan Global">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+        </button>
+        <button onclick="openSyncModal()" class="p-2 rounded-full hover:bg-white/10 transition text-gray-200" title="Backup & Sinkronisasi Cloud">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+        </button>
+        <button onclick="openSettingsModal()" class="p-2 rounded-full hover:bg-white/10 transition text-gray-200" title="Pengaturan & Konfigurasi API">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+        </button>
+        <button onclick="openAuthModal()" id="btn-auth-header" class="text-xs font-bold bg-white/10 hover:bg-white/20 text-binder-gold px-2.5 py-1.5 rounded-lg border border-binder-gold/30 flex items-center space-x-1" title="Autentikasi Akun Mahasiswa">
+          <span>👤 Masuk</span>
+        </button>
+        <button onclick="openAddCourseModal()" class="hidden md:flex items-center space-x-1 bg-binder-gold text-binder-espresso px-3 py-1.5 rounded-lg text-xs font-bold shadow hover:bg-yellow-400 transition">
+          <span>+ Tambah MK</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Application Content Area -->
+  <main class="max-w-4xl mx-auto w-full px-4 py-4 flex-grow pb-24">
+
+    <!-- TAB 1: BERANDA / MEJA BELAJAR DIGITAL -->
+    <section id="tab-home" class="space-y-5">
+      <!-- Greeting & Campus Info -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-2">
+        <div>
+          <h2 id="home-greeting" class="font-serif text-2xl font-bold text-binder-espresso">Halo, Ahmad Fadhil! 📚</h2>
+          <p id="home-campus-info" class="text-xs md:text-sm text-binder-subtext">UIN Sultan Syarif Kasim Riau • Ilmu Komunikasi • Semester 3</p>
+        </div>
+        <div class="flex items-center space-x-2">
+          <span class="bg-binder-sand text-binder-espresso text-xs font-semibold px-3 py-1 rounded-full border border-binder-caramel/30">
+            Semester Aktif: <strong id="home-active-sem-badge">3</strong> (2024/2025)
+          </span>
+        </div>
+      </div>
+
+      <!-- Study Desk Hero Banner -->
+      <div class="relative w-full h-44 md:h-56 rounded-2xl overflow-hidden shadow-lg border-2 border-binder-sand group">
+        <img src="./study_desk_banner.jpg" alt="Meja Belajar Digital" class="w-full h-full object-cover">
+        <div class="absolute inset-0 bg-gradient-to-t from-binder-espresso/80 via-binder-espresso/30 to-transparent flex flex-col justify-end p-4 md:p-6 text-white">
+          <span class="bg-binder-cream/90 text-binder-espresso text-[11px] font-bold px-2.5 py-1 rounded-md self-start mb-2 backdrop-blur-sm">
+            Meja Belajar Digital Mahasiswa
+          </span>
+          <p class="font-serif text-base md:text-lg font-bold text-white drop-shadow">
+            Catat penjelasan dosen, rekam audio kuliah, dan rangkum otomatis dengan AI.
+          </p>
+        </div>
+      </div>
+
+      <!-- Quick Stats Grid -->
+      <div class="grid grid-cols-3 gap-3">
+        <div class="bg-white p-3 md:p-4 rounded-xl shadow-sm border border-binder-sand flex flex-col justify-center items-center text-center">
+          <span class="text-xl md:text-2xl">📚</span>
+          <span id="stat-courses" class="font-serif font-bold text-lg md:text-xl text-binder-espresso mt-1">5 MK</span>
+          <span class="text-[11px] text-binder-subtext">Mata Kuliah</span>
+        </div>
+        <div class="bg-white p-3 md:p-4 rounded-xl shadow-sm border border-binder-sand flex flex-col justify-center items-center text-center">
+          <span class="text-xl md:text-2xl">📝</span>
+          <span id="stat-notes" class="font-serif font-bold text-lg md:text-xl text-binder-espresso mt-1">8 Lembar</span>
+          <span class="text-[11px] text-binder-subtext">Catatan Binder</span>
+        </div>
+        <div class="bg-white p-3 md:p-4 rounded-xl shadow-sm border border-binder-sand flex flex-col justify-center items-center text-center">
+          <span class="text-xl md:text-2xl">🎙️</span>
+          <span id="stat-records" class="font-serif font-bold text-lg md:text-xl text-binder-espresso mt-1">3 Audio</span>
+          <span class="text-[11px] text-binder-subtext">Rekaman Dosen</span>
+        </div>
+      </div>
+
+      <!-- Quick Action Buttons -->
+      <div class="grid grid-cols-3 gap-2 md:gap-3">
+        <button onclick="openAddCourseModal()" class="flex items-center justify-center space-x-1.5 bg-binder-sand hover:bg-binder-card text-binder-espresso py-2.5 px-2 rounded-xl text-xs font-bold border border-binder-caramel/20 transition">
+          <span>+ Tambah MK</span>
+        </button>
+        <button onclick="switchTab('record')" class="flex items-center justify-center space-x-1.5 bg-binder-sand hover:bg-binder-card text-binder-espresso py-2.5 px-2 rounded-xl text-xs font-bold border border-binder-caramel/20 transition">
+          <span>🎙️ Rekam Dosen</span>
+        </button>
+        <button onclick="switchTab('ai')" class="flex items-center justify-center space-x-1.5 bg-binder-sand hover:bg-binder-card text-binder-espresso py-2.5 px-2 rounded-xl text-xs font-bold border border-binder-caramel/20 transition">
+          <span>✨ AI Resume</span>
+        </button>
+      </div>
+
+      <!-- Today's Schedule -->
+      <div class="bg-white rounded-xl p-4 shadow-sm border border-binder-sand">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-serif font-bold text-binder-espresso text-base flex items-center space-x-1.5">
+            <span>📅 Jadwal Kuliah Semester Ini</span>
+          </h3>
+          <span class="text-xs text-binder-subtext">Hari & Ruangan</span>
+        </div>
+        <div id="schedule-list" class="space-y-2">
+          <!-- Injected via JS -->
+        </div>
+      </div>
+
+      <!-- Recent Notes Activity -->
+      <div class="bg-white rounded-xl p-4 shadow-sm border border-binder-sand">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-serif font-bold text-binder-espresso text-base">📖 Aktivitas Catatan Terbaru</h3>
+          <button onclick="switchTab('binders')" class="text-xs font-bold text-binder-caramel hover:underline">Lihat Semua Binder ❯</button>
+        </div>
+        <div id="recent-notes-list" class="space-y-2">
+          <!-- Injected via JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: BINDER SAYA (Koleksi Buku Catatan) -->
+    <section id="tab-binders" class="hidden space-y-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="font-serif text-2xl font-bold text-binder-espresso">Binder Kuliah Saya</h2>
+          <p class="text-xs text-binder-subtext">Setiap mata kuliah memiliki buku binder catatan fisik tersendiri.</p>
+        </div>
+        <button onclick="openAddCourseModal()" class="bg-binder-espresso hover:bg-binder-caramel text-white text-xs font-bold px-3 py-2 rounded-lg shadow transition flex items-center space-x-1">
+          <span>+ Buat Binder MK</span>
+        </button>
+      </div>
+
+      <div id="courses-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Injected via JS -->
+      </div>
+    </section>
+
+    <!-- TAB 3: BINDER DETAIL / NOTEBOOK VIEW (Fitur Utama Buku Fisik) -->
+    <section id="tab-binder-detail" class="hidden space-y-4">
+      <!-- Binder Detail Top Bar -->
+      <div class="flex items-center justify-between bg-binder-sand p-3 rounded-xl border border-binder-caramel/30">
+        <button onclick="switchTab('binders')" class="flex items-center space-x-1 text-binder-espresso text-xs font-bold hover:underline">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+          <span>Kembali ke Binder</span>
+        </button>
+
+        <div class="text-center">
+          <h2 id="detail-course-name" class="font-serif font-bold text-base md:text-lg text-binder-espresso">Nama Mata Kuliah</h2>
+          <p id="detail-course-lecturer" class="text-[11px] text-binder-subtext">Dosen Pengampu • 3 SKS</p>
+        </div>
+
+        <button onclick="openNoteEditor()" class="bg-binder-espresso text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow hover:bg-binder-caramel transition">
+          + Tulis Catatan
+        </button>
+      </div>
+
+      <!-- Paper Type & Page Flipper Bar -->
+      <div class="flex flex-wrap items-center justify-between gap-2 bg-white p-2.5 rounded-lg shadow-sm border border-binder-sand">
+        <!-- Page Flipper Controls -->
+        <div class="flex items-center space-x-2">
+          <button onclick="prevPage()" class="p-1 rounded bg-binder-sand hover:bg-binder-card text-binder-espresso disabled:opacity-40" id="btn-prev-page">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+          </button>
+          <span id="page-counter-badge" class="bg-binder-sand font-bold text-xs text-binder-espresso px-2.5 py-1 rounded">
+            Hal 1 / 1
+          </span>
+          <button onclick="nextPage()" class="p-1 rounded bg-binder-sand hover:bg-binder-card text-binder-espresso disabled:opacity-40" id="btn-next-page">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+          </button>
+        </div>
+
+        <!-- Paper Type Switcher -->
+        <div class="flex items-center space-x-1.5 text-xs">
+          <span class="text-binder-subtext text-[11px]">Kertas:</span>
+          <button onclick="setPaperType('lined')" id="btn-paper-lined" class="px-2 py-1 rounded bg-binder-caramel text-white font-semibold">Bergaris</button>
+          <button onclick="setPaperType('grid')" id="btn-paper-grid" class="px-2 py-1 rounded bg-binder-sand text-binder-espresso">Kotak</button>
+          <button onclick="setPaperType('blank')" id="btn-paper-blank" class="px-2 py-1 rounded bg-binder-sand text-binder-espresso">Polos</button>
+          <button onclick="setPaperType('cornell')" id="btn-paper-cornell" class="px-2 py-1 rounded bg-binder-sand text-binder-espresso">Cornell</button>
+        </div>
+
+        <!-- Page Actions -->
+        <div class="flex flex-wrap items-center gap-1.5">
+          <button onclick="editCurrentPage()" class="text-xs bg-binder-sand hover:bg-binder-card text-binder-espresso font-semibold px-2.5 py-1 rounded transition">✏️ Edit</button>
+          <button onclick="exportCurrentNoteToPdf()" class="text-xs bg-binder-espresso hover:bg-binder-caramel text-white font-bold px-2.5 py-1 rounded shadow transition flex items-center space-x-1" title="Unduh Catatan Lembar Ini Menjadi File PDF">
+            <span>📄 Unduh PDF</span>
+          </button>
+          <button onclick="exportFullBinderToPdf()" class="text-xs bg-binder-gold text-binder-espresso hover:bg-yellow-400 font-bold px-2 py-1 rounded transition" title="Unduh Seluruh Binder MK ke PDF">
+            <span>📚 Semua Hal (PDF)</span>
+          </button>
+          <button onclick="copyCurrentNoteText()" class="text-xs text-binder-subtext hover:text-binder-espresso font-semibold px-2 py-1">📋 Salin</button>
+          <button onclick="deleteCurrentPage()" class="text-xs text-binder-terracotta hover:underline font-semibold px-1.5 py-1">🗑️ Hapus</button>
+        </div>
+      </div>
+
+      <!-- THE AUTHENTIC PHYSICAL BINDER SHEET CANVAS -->
+      <div class="relative bg-binder-espresso p-1.5 md:p-2.5 rounded-2xl shadow-2xl border-4 border-[#3D2B1E]">
+        <!-- 6 Metallic Gold Rings on the Left Gutter -->
+        <div class="absolute left-3 top-0 bottom-0 flex flex-col justify-around py-8 z-20 pointer-events-none">
+          <div class="ring-hole"><div class="gold-ring"></div></div>
+          <div class="ring-hole"><div class="gold-ring"></div></div>
+          <div class="ring-hole"><div class="gold-ring"></div></div>
+          <div class="ring-hole"><div class="gold-ring"></div></div>
+          <div class="ring-hole"><div class="gold-ring"></div></div>
+          <div class="ring-hole"><div class="gold-ring"></div></div>
+        </div>
+
+        <!-- Paper Page Content Sheet -->
+        <div id="binder-paper-sheet" class="binder-paper-lined min-h-[460px] md:min-h-[560px] rounded-xl pl-16 pr-5 py-6 shadow-inner relative z-10 transition-all duration-200">
+          <!-- Page Header Info -->
+          <div class="flex items-center justify-between border-b border-binder-ruled/60 pb-2 mb-3">
+            <div class="flex items-center space-x-2">
+              <span id="sheet-meeting-badge" class="bg-binder-sand text-binder-espresso text-[11px] font-bold px-2 py-0.5 rounded">Pertemuan ke-1</span>
+              <span id="sheet-date-badge" class="text-[11px] text-binder-subtext">30 Okt 2026</span>
+            </div>
+            <span id="sheet-bookmark-badge" class="text-xs text-binder-gold font-bold">★ Penting</span>
+          </div>
+
+          <!-- Note Title -->
+          <h3 id="sheet-note-title" class="font-serif font-bold text-xl md:text-2xl text-binder-espresso mb-3 leading-snug">
+            Judul Catatan Perkuliahan
+          </h3>
+
+          <!-- Note Body -->
+          <div id="sheet-note-body" class="text-sm md:text-base text-binder-text whitespace-pre-wrap font-sans">
+            Materi catatan dosen akan ditampilkan di sini...
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: PEREKAM SUARA DOSEN (Audio Lecture Recorder) -->
+    <section id="tab-record" class="hidden space-y-4">
+      <div>
+        <h2 class="font-serif text-2xl font-bold text-binder-espresso">Perekam Suara Dosen</h2>
+        <p class="text-xs text-binder-subtext">Rekam penjelasan kuliah langsung dari mikrofon HP, pantau gelombang suara, lalu transkripkan dengan AI.</p>
+      </div>
+
+      <!-- Recorder Console Card (Matching User Reference Image) -->
+      <div class="bg-white rounded-2xl p-5 md:p-6 shadow-lg border border-binder-sand text-center space-y-4">
+        <!-- Target Course Picker -->
+        <div class="max-w-md mx-auto text-left">
+          <label class="block text-xs font-bold text-binder-subtext mb-1">Pilih Mata Kuliah untuk Rekaman Ini:</label>
+          <select id="record-course-select" class="w-full bg-binder-sand/50 border border-binder-caramel/30 rounded-lg p-2 text-xs font-semibold text-binder-espresso focus:outline-none focus:ring-1 focus:ring-binder-espresso">
+            <!-- Injected via JS -->
+          </select>
+        </div>
+
+        <!-- Meeting Number Selector -->
+        <div class="flex items-center justify-center space-x-3 text-xs">
+          <span class="text-binder-subtext">Pertemuan:</span>
+          <div class="flex items-center space-x-2 bg-binder-sand px-3 py-1 rounded-md font-bold text-binder-espresso">
+            <button onclick="decrementMeeting()" class="hover:text-binder-caramel">◀</button>
+            <span id="record-meeting-no">Ke-1</span>
+            <button onclick="incrementMeeting()" class="hover:text-binder-caramel">▶</button>
+          </div>
+        </div>
+
+        <!-- Big Live Timer Display -->
+        <div id="recorder-timer" class="font-mono font-bold text-4xl md:text-5xl text-binder-espresso tracking-wider my-2">
+          00:00:00
+        </div>
+
+        <!-- Real-time Audio Waveform Canvas Visualizer -->
+        <div class="w-full max-w-md mx-auto h-16 bg-binder-card rounded-xl overflow-hidden flex items-center justify-center p-2 border border-binder-sand">
+          <canvas id="waveform-canvas" class="w-full h-full"></canvas>
+        </div>
+
+        <!-- Recording Control Buttons -->
+        <div class="flex items-center justify-center space-x-5 pt-2">
+          <button id="btn-start-record" onclick="toggleRecording()" class="w-16 h-16 rounded-full bg-binder-terracotta hover:bg-red-700 text-white flex items-center justify-center shadow-lg transition transform active:scale-95">
+            <svg id="record-icon-svg" class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
+          </button>
+          
+          <button id="btn-pause-record" onclick="pauseRecording()" class="hidden w-12 h-12 rounded-full bg-binder-sand hover:bg-binder-card text-binder-espresso flex items-center justify-center shadow transition">
+            ⏸️
+          </button>
+        </div>
+
+        <p id="record-status-label" class="text-xs text-binder-subtext">Ketuk tombol mikrofon untuk mulai merekam dosen.</p>
+      </div>
+
+      <!-- Saved Recordings List -->
+      <div class="bg-white rounded-xl p-4 shadow-sm border border-binder-sand">
+        <h3 class="font-serif font-bold text-binder-espresso text-base mb-3">Arsip Rekaman Perkuliahan</h3>
+        <div id="recordings-list" class="space-y-3">
+          <!-- Injected via JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 5: AI ASSISTANT & RESUME (Satu Rekaman -> Satu Catatan Lengkap) -->
+    <section id="tab-ai" class="hidden space-y-4">
+      <div>
+        <div class="flex items-center space-x-2">
+          <h2 class="font-serif text-2xl font-bold text-binder-espresso">AI Study Assistant</h2>
+          <span class="bg-binder-gold text-binder-espresso text-xs font-bold px-2 py-0.5 rounded">Gemini</span>
+        </div>
+        <p class="text-xs text-binder-subtext">Fitur unggulan: Satu Rekaman → Satu Catatan Lengkap, resume 8 struktur, dan tutor kuliah.</p>
+      </div>
+
+      <!-- Feature 15: AI Processed Package Result Card (When available) -->
+      <div id="ai-result-container" class="hidden bg-white rounded-2xl p-5 shadow-lg border-2 border-binder-gold/50 space-y-3">
+        <div class="flex items-center justify-between border-b border-binder-sand pb-2">
+          <span class="bg-green-100 text-green-800 text-xs font-bold px-2.5 py-1 rounded-md flex items-center space-x-1">
+            <span>✓ Satu Rekaman → Satu Catatan Lengkap Berhasil</span>
+          </span>
+          <button onclick="dismissAiResult()" class="text-xs text-gray-400 hover:text-gray-600 font-bold">✕ Tutup</button>
+        </div>
+
+        <h3 id="ai-res-title" class="font-serif font-bold text-xl text-binder-espresso">Judul Materi Perkuliahan</h3>
+
+        <!-- Multi-tab AI Output -->
+        <div class="flex flex-wrap gap-1 border-b border-binder-sand pb-2 text-xs">
+          <button onclick="setAiTab('structured')" id="btn-ai-tab-structured" class="px-2.5 py-1 rounded bg-binder-espresso text-white font-bold">Catatan Terstruktur</button>
+          <button onclick="setAiTab('summary')" id="btn-ai-tab-summary" class="px-2.5 py-1 rounded bg-binder-sand text-binder-espresso font-semibold">Resume 8 Poin</button>
+          <button onclick="setAiTab('transcript')" id="btn-ai-tab-transcript" class="px-2.5 py-1 rounded bg-binder-sand text-binder-espresso font-semibold">Transkrip Lengkap</button>
+          <button onclick="setAiTab('definitions')" id="btn-ai-tab-definitions" class="px-2.5 py-1 rounded bg-binder-sand text-binder-espresso font-semibold">Istilah & Definisi</button>
+          <button onclick="setAiTab('conclusion')" id="btn-ai-tab-conclusion" class="px-2.5 py-1 rounded bg-binder-sand text-binder-espresso font-semibold">Kesimpulan</button>
+        </div>
+
+        <!-- AI Tab Content Box -->
+        <div id="ai-tab-content-box" class="bg-binder-cream/60 p-3.5 rounded-xl text-sm leading-relaxed max-h-72 overflow-y-auto whitespace-pre-wrap font-sans border border-binder-sand">
+          <!-- Injected via JS -->
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex flex-wrap items-center gap-2 pt-2">
+          <button onclick="saveAiPackageToBinder()" class="flex-1 bg-binder-espresso hover:bg-binder-caramel text-white text-xs font-bold py-2.5 px-3 rounded-lg shadow transition flex items-center justify-center space-x-1.5">
+            <span>💾 Simpan Semua ke Binder</span>
+          </button>
+          <button onclick="exportAiPackageToPdf()" class="bg-binder-gold hover:bg-yellow-400 text-binder-espresso text-xs font-bold py-2.5 px-3 rounded-lg shadow transition flex items-center justify-center space-x-1" title="Unduh Paket AI Lengkap ke File PDF">
+            <span>📄 Unduh PDF (jsPDF)</span>
+          </button>
+          <button onclick="copyAiResult()" class="bg-binder-sand hover:bg-binder-card text-binder-espresso text-xs font-bold py-2.5 px-3 rounded-lg border border-binder-caramel/30 transition">
+            📋 Salin
+          </button>
+        </div>
+      </div>
+
+      <!-- Feature 8: Manual Notes Summarizer Card -->
+      <div class="bg-white rounded-xl p-4 md:p-5 shadow-sm border border-binder-sand space-y-3">
+        <h3 class="font-serif font-bold text-binder-espresso text-base">Rangkum Catatan Kuliah Manual (8 Struktur)</h3>
+        <p class="text-xs text-binder-subtext">Ketik atau tempel materi catatan dosen untuk dibuatkan resume akademik otomatis.</p>
+        
+        <textarea id="ai-input-notes" rows="4" placeholder="Tempel materi atau catatan kuliah di sini..." class="w-full bg-binder-cream/50 border border-binder-sand rounded-xl p-3 text-xs md:text-sm text-binder-text focus:outline-none focus:ring-1 focus:ring-binder-espresso"></textarea>
+
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div class="flex items-center space-x-2 text-xs">
+            <span class="text-binder-subtext">Panjang:</span>
+            <label class="flex items-center space-x-1"><input type="radio" name="summary-len" value="ringkas"> <span>Ringkas</span></label>
+            <label class="flex items-center space-x-1"><input type="radio" name="summary-len" value="sedang" checked> <span>Sedang</span></label>
+            <label class="flex items-center space-x-1"><input type="radio" name="summary-len" value="lengkap"> <span>Lengkap</span></label>
+          </div>
+
+          <button onclick="generateManualSummary()" class="bg-binder-espresso hover:bg-binder-caramel text-white text-xs font-bold px-4 py-2 rounded-lg shadow transition">
+            ✨ Buat Resume 8 Struktur
+          </button>
+        </div>
+      </div>
+
+      <!-- Ask AI Tutor / Q&A Card -->
+      <div class="bg-white rounded-xl p-4 md:p-5 shadow-sm border border-binder-sand space-y-3">
+        <h3 class="font-serif font-bold text-binder-espresso text-base">Tanya AI Seputar Kuliah</h3>
+        <p class="text-xs text-binder-subtext">Tanyakan konsep materi, penjelasan istilah dosen yang belum dipahami, atau kisi-kisi ujian.</p>
+        
+        <!-- Chips -->
+        <div class="flex flex-wrap gap-1.5">
+          <button onclick="setPromptQuestion('Jelaskan istilah akademik sulit dalam materi ini')" class="bg-binder-sand text-binder-espresso text-[11px] px-2.5 py-1 rounded-full hover:bg-binder-card">Jelaskan istilah sulit</button>
+          <button onclick="setPromptQuestion('Buatkan 3 latihan soal ujian beserta pembahasannya')" class="bg-binder-sand text-binder-espresso text-[11px] px-2.5 py-1 rounded-full hover:bg-binder-card">Latihan soal ujian</button>
+          <button onclick="setPromptQuestion('Apa perbedaan teori utama dalam pembahasan ini?')" class="bg-binder-sand text-binder-espresso text-[11px] px-2.5 py-1 rounded-full hover:bg-binder-card">Perbedaan teori</button>
+        </div>
+
+        <div class="flex items-center space-x-2">
+          <input type="text" id="ai-ask-input" placeholder="Tanyakan apa saja seputar materi perkuliahan..." class="flex-1 bg-binder-cream/50 border border-binder-sand rounded-xl px-3 py-2 text-xs md:text-sm text-binder-text focus:outline-none focus:ring-1 focus:ring-binder-espresso">
+          <button onclick="askAiTutor()" class="bg-binder-espresso hover:bg-binder-caramel text-white p-2.5 rounded-xl shadow">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+          </button>
+        </div>
+
+        <div id="ai-answer-box" class="hidden bg-binder-sand/30 p-3 rounded-xl text-xs md:text-sm whitespace-pre-wrap border border-binder-sand"></div>
+      </div>
+    </section>
+
+    <!-- TAB 6: PROFIL MAHASISWA & PERPUSTAKAAN AKADEMIK SEUMUR HIDUP -->
+    <section id="tab-profile" class="hidden space-y-4">
+      <div>
+        <h2 class="font-serif text-2xl font-bold text-binder-espresso">Identitas & Arsip Akademik</h2>
+        <p class="text-xs text-binder-subtext">Kartu identitas mahasiswa, pengelolaan multi-semester, dan perpustakaan seumur hidup.</p>
+      </div>
+
+      <!-- KTM Digital Card -->
+      <div class="bg-gradient-to-br from-binder-espresso to-[#2D1E16] text-white p-5 rounded-2xl shadow-xl border-2 border-binder-gold/40 relative overflow-hidden">
+        <div class="flex items-center justify-between border-b border-white/20 pb-2 mb-3">
+          <div class="flex items-center space-x-2">
+            <span class="text-2xl">🎓</span>
+            <div>
+              <h3 id="ktm-uni" class="font-serif font-bold text-sm md:text-base leading-tight">UIN Sultan Syarif Kasim Riau</h3>
+              <p id="ktm-faculty" class="text-[11px] text-gray-300">Fakultas Dakwah dan Komunikasi</p>
+            </div>
+          </div>
+          <button onclick="openEditProfileModal()" class="text-xs bg-white/10 hover:bg-white/20 px-2.5 py-1 rounded border border-white/30">Edit</button>
+        </div>
+
+        <div class="flex items-center space-x-4 my-2">
+          <div class="w-14 h-14 rounded-full bg-binder-gold flex items-center justify-center font-serif text-2xl font-bold text-binder-espresso shadow-md">
+            <span id="ktm-avatar-initial">A</span>
+          </div>
+          <div>
+            <h4 id="ktm-name" class="font-bold text-base md:text-lg">Ahmad Fadhil</h4>
+            <p id="ktm-nim" class="font-mono text-xs text-binder-gold">12540311761</p>
+            <p id="ktm-prog" class="text-xs text-gray-300">Ilmu Komunikasi • Kelas IKOM-3A</p>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between text-xs pt-2 border-t border-white/10 text-gray-300 mt-2">
+          <span id="ktm-status" class="bg-white/20 px-2 py-0.5 rounded text-[11px] font-semibold text-white">Mahasiswa Aktif</span>
+          <span>Semester: <strong id="ktm-semester" class="text-white">3</strong> (2024/2025)</span>
+        </div>
+      </div>
+
+      <!-- Lifetime Academic Library Menu -->
+      <div class="bg-white rounded-xl p-4 shadow-sm border border-binder-sand space-y-2">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <span class="text-xl">🏛️</span>
+            <div>
+              <h3 class="font-serif font-bold text-binder-espresso text-base">Perpustakaan Akademik Seumur Hidup</h3>
+              <p class="text-xs text-binder-subtext">Seluruh catatan semester 1 sampai lulus tetap tersimpan permanen dan dapat dibuka kapan saja.</p>
+            </div>
+          </div>
+        </div>
+        <div id="academic-library-list" class="space-y-1.5 pt-2">
+          <!-- Injected via JS -->
+        </div>
+      </div>
+
+      <!-- Supabase Cloud Account & Sync Card -->
+      <div class="bg-white rounded-xl p-4 shadow-sm border border-binder-sand space-y-3">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <span class="text-xl">☁️</span>
+            <div>
+              <h3 class="font-serif font-bold text-binder-espresso text-base">Sinkronisasi Cloud & Supabase</h3>
+              <p class="text-xs text-binder-subtext" id="supabase-status-label">Status: Penyimpanan Lokal Aktif (Data Tersimpan Permanen)</p>
+            </div>
+          </div>
+          <button onclick="openSyncModal()" class="text-xs bg-binder-espresso hover:bg-binder-caramel text-white font-bold px-3 py-1.5 rounded-lg shadow">
+            Sinkronkan
+          </button>
+        </div>
+        <div class="flex items-center space-x-2 pt-1">
+          <button onclick="openAuthModal()" class="flex-1 bg-binder-sand hover:bg-binder-card text-binder-espresso text-xs font-bold py-2 px-3 rounded-lg border border-binder-caramel/30 transition text-center">
+            🔐 Akun Mahasiswa
+          </button>
+          <button onclick="openSettingsModal()" class="flex-1 bg-binder-sand hover:bg-binder-card text-binder-espresso text-xs font-bold py-2 px-3 rounded-lg border border-binder-caramel/30 transition text-center">
+            ⚙️ Pengaturan & API Key
+          </button>
+        </div>
+      </div>
+
+      <!-- Backup & Data Export -->
+      <div class="bg-white rounded-xl p-4 shadow-sm border border-binder-sand space-y-2">
+        <h3 class="font-serif font-bold text-binder-espresso text-base">Cadangan & Ekspor Data</h3>
+        <p class="text-xs text-binder-subtext">Ekspor seluruh ringkasan data binder kuliah Anda ke format file JSON atau salin teks.</p>
+        <div class="grid grid-cols-2 gap-2 pt-1">
+          <button onclick="downloadJsonBackup()" class="bg-binder-sand hover:bg-binder-card text-binder-espresso font-bold text-xs py-2 rounded-lg border border-binder-caramel/30 transition">
+            📥 Unduh File JSON
+          </button>
+          <button onclick="exportAllData()" class="bg-binder-sand hover:bg-binder-card text-binder-espresso font-bold text-xs py-2 rounded-lg border border-binder-caramel/30 transition">
+            📋 Salin ke Clipboard
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Bottom Navigation Bar (5 Menus) -->
+  <nav class="fixed bottom-0 left-0 right-0 z-40 bg-binder-card border-t border-binder-sand shadow-lg">
+    <div class="max-w-md mx-auto px-2 py-1.5 flex justify-around items-center">
+      <button onclick="switchTab('home')" id="nav-btn-home" class="flex flex-col items-center py-1 px-3 text-binder-espresso font-bold transition">
+        <span class="text-lg">🏠</span>
+        <span class="text-[10px] mt-0.5">Beranda</span>
+      </button>
+
+      <button onclick="switchTab('binders')" id="nav-btn-binders" class="flex flex-col items-center py-1 px-3 text-binder-subtext hover:text-binder-espresso transition">
+        <span class="text-lg">📚</span>
+        <span class="text-[10px] mt-0.5">Binder</span>
+      </button>
+
+      <button onclick="switchTab('record')" id="nav-btn-record" class="flex flex-col items-center py-1 px-3 text-binder-subtext hover:text-binder-espresso transition">
+        <span class="text-lg">🎙️</span>
+        <span class="text-[10px] mt-0.5">Rekam</span>
+      </button>
+
+      <button onclick="switchTab('ai')" id="nav-btn-ai" class="flex flex-col items-center py-1 px-3 text-binder-subtext hover:text-binder-espresso transition">
+        <span class="text-lg">✨</span>
+        <span class="text-[10px] mt-0.5">AI Resume</span>
+      </button>
+
+      <button onclick="switchTab('profile')" id="nav-btn-profile" class="flex flex-col items-center py-1 px-3 text-binder-subtext hover:text-binder-espresso transition">
+        <span class="text-lg">👤</span>
+        <span class="text-[10px] mt-0.5">Profil</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- MODAL: NOTE WRITER / EDITOR -->
+  <div id="modal-note-editor" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-3">
+    <div class="bg-binder-cream w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      <div class="bg-binder-espresso text-white px-4 py-3 flex items-center justify-between">
+        <h3 id="editor-modal-title" class="font-serif font-bold text-base">Tulis Catatan Kuliah Baru</h3>
+        <button onclick="closeNoteEditor()" class="text-white hover:text-gray-300 font-bold">✕</button>
+      </div>
+
+      <div class="p-4 space-y-3 overflow-y-auto flex-1">
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-semibold text-binder-subtext mb-1">Pertemuan ke-</label>
+            <input type="number" id="edit-note-meeting" value="1" min="1" max="16" class="w-full bg-white border border-binder-sand rounded-lg p-2 text-xs font-bold text-binder-espresso">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-binder-subtext mb-1">Jenis Kertas</label>
+            <select id="edit-note-papertype" class="w-full bg-white border border-binder-sand rounded-lg p-2 text-xs font-semibold text-binder-espresso">
+              <option value="lined">Bergaris</option>
+              <option value="grid">Kotak-kotak</option>
+              <option value="blank">Polos</option>
+              <option value="cornell">Jurnal Cornell</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-binder-subtext mb-1">Judul Materi *</label>
+          <input type="text" id="edit-note-title" placeholder="Contoh: Pengantar Negosiasi Bisnis" class="w-full bg-white border border-binder-sand rounded-lg p-2.5 text-sm font-bold text-binder-text focus:outline-none focus:ring-1 focus:ring-binder-espresso">
+        </div>
+
+        <!-- Formatting quick buttons -->
+        <div class="flex items-center space-x-1.5 text-xs bg-binder-sand/60 p-2 rounded-lg">
+          <button onclick="insertFormat('**Teks Tebal**')" class="px-2 py-1 bg-white rounded font-bold">B</button>
+          <button onclick="insertFormat('*Teks Miring*')" class="px-2 py-1 bg-white rounded italic">I</button>
+          <button onclick="insertFormat('\n• ')" class="px-2 py-1 bg-white rounded">• Poin</button>
+          <button onclick="insertFormat('\n1. ')" class="px-2 py-1 bg-white rounded">1. Nomor</button>
+          <button onclick="insertFormat(' [PENTING] ')" class="px-2 py-1 bg-binder-gold text-binder-espresso rounded font-semibold">★ Penting</button>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-binder-subtext mb-1">Isi Catatan Lembar Binder</label>
+          <textarea id="edit-note-content" rows="9" placeholder="Tulis catatan kuliah dosen, rumus, poin pembahasan, atau rangkuman di sini..." class="w-full bg-white border border-binder-sand rounded-lg p-3 text-sm text-binder-text focus:outline-none focus:ring-1 focus:ring-binder-espresso"></textarea>
+        </div>
+      </div>
+
+      <div class="bg-binder-card px-4 py-3 flex justify-end space-x-2 border-t border-binder-sand">
+        <button onclick="closeNoteEditor()" class="px-4 py-2 rounded-lg text-xs font-semibold text-binder-subtext hover:bg-binder-sand">Batal</button>
+        <button onclick="saveNoteFromEditor()" class="px-4 py-2 rounded-lg text-xs font-bold bg-binder-espresso text-white hover:bg-binder-caramel shadow">Simpan ke Binder</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ADD COURSE -->
+  <div id="modal-add-course" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-3">
+    <div class="bg-binder-cream w-full max-w-md rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+      <div class="bg-binder-espresso text-white px-4 py-3 flex items-center justify-between">
+        <h3 class="font-serif font-bold text-base">+ Buat Binder Mata Kuliah</h3>
+        <button onclick="closeAddCourseModal()" class="text-white hover:text-gray-300 font-bold">✕</button>
+      </div>
+
+      <div class="p-4 space-y-3 overflow-y-auto max-h-[80vh]">
+        <div>
+          <label class="block text-xs font-semibold text-binder-subtext mb-1">Nama Mata Kuliah *</label>
+          <input type="text" id="add-c-name" placeholder="Contoh: Komunikasi Bisnis" class="w-full bg-white border border-binder-sand rounded-lg p-2 text-xs font-bold text-binder-text">
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-semibold text-binder-subtext mb-1">Kode MK</label>
+            <input type="text" id="add-c-code" placeholder="KOM301" class="w-full bg-white border border-binder-sand rounded-lg p-2 text-xs text-binder-text">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-binder-subtext mb-1">Jumlah SKS</label>
+            <input type="number" id="add-c-credits" value="3" min="1" max="6" class="w-full bg-white border border-binder-sand rounded-lg p-2 text-xs font-bold text-binder-text">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-binder-subtext mb-1">Dosen Pengampu</label>
+          <input type="text" id="add-c-lecturer" placeholder="Contoh: Dr. H. Rusdianto, M.Si" class="w-full bg-white border border-binder-sand rounded-lg p-2 text-xs text-binder-text">
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-semibold text-binder-subtext mb-1">Hari & Jam</label>
+            <input type="text" id="add-c-schedule" value="Senin, 08:00 - 10:30" class="w-full bg-white border border-binder-sand rounded-lg p-2 text-xs text-binder-text">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-binder-subtext mb-1">Ruang Kelas</label>
+            <input type="text" id="add-c-room" value="Ruang R-302" class="w-full bg-white border border-binder-sand rounded-lg p-2 text-xs text-binder-text">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-binder-subtext mb-1">Warna Sampul Binder</label>
+          <div class="flex items-center space-x-2 pt-1" id="color-picker-group">
+            <button type="button" onclick="selectCoverColor('#4A3525')" class="w-8 h-8 rounded-full bg-[#4A3525] border-2 border-white shadow color-choice ring-2 ring-binder-espresso"></button>
+            <button type="button" onclick="selectCoverColor('#9E7154')" class="w-8 h-8 rounded-full bg-[#9E7154] border-2 border-white shadow color-choice"></button>
+            <button type="button" onclick="selectCoverColor('#6E8B74')" class="w-8 h-8 rounded-full bg-[#6E8B74] border-2 border-white shadow color-choice"></button>
+            <button type="button" onclick="selectCoverColor('#BF8292')" class="w-8 h-8 rounded-full bg-[#BF8292] border-2 border-white shadow color-choice"></button>
+            <button type="button" onclick="selectCoverColor('#4A6572')" class="w-8 h-8 rounded-full bg-[#4A6572] border-2 border-white shadow color-choice"></button>
+            <button type="button" onclick="selectCoverColor('#D4AF37')" class="w-8 h-8 rounded-full bg-[#D4AF37] border-2 border-white shadow color-choice"></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-binder-card px-4 py-3 flex justify-end space-x-2 border-t border-binder-sand">
+        <button onclick="closeAddCourseModal()" class="px-4 py-2 rounded-lg text-xs font-semibold text-binder-subtext hover:bg-binder-sand">Batal</button>
+        <button onclick="saveNewCourse()" class="px-4 py-2 rounded-lg text-xs font-bold bg-binder-espresso text-white hover:bg-binder-caramel shadow">Buat Binder</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: GLOBAL SEARCH -->
+  <div id="modal-search" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-start justify-center p-3 pt-12">
+    <div class="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
+      <div class="p-3 border-b border-binder-sand flex items-center space-x-2">
+        <svg class="w-5 h-5 text-binder-espresso" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+        <input type="text" id="global-search-input" oninput="performGlobalSearch()" placeholder="Cari catatan, materi, transkrip dosen..." class="w-full text-sm font-semibold text-binder-text focus:outline-none">
+        <button onclick="closeSearchModal()" class="text-xs text-gray-400 hover:text-gray-600 font-bold px-2">Tutup</button>
+      </div>
+      <div id="search-results-list" class="p-3 space-y-2 overflow-y-auto flex-1">
+        <p class="text-xs text-binder-subtext text-center py-6">Ketik kata kunci untuk mencari di seluruh semester.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: EDIT IDENTITAS MAHASISWA -->
+  <div id="modal-edit-profile" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-3">
+    <div class="bg-binder-cream w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      <div class="bg-binder-espresso text-white px-4 py-3 flex items-center justify-between">
+        <h3 class="font-serif font-bold text-base">Edit Identitas Mahasiswa (KTM)</h3>
+        <button onclick="closeEditProfileModal()" class="text-white hover:text-gray-300 font-bold">✕</button>
+      </div>
+
+      <div class="p-4 space-y-3 overflow-y-auto flex-1">
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-semibold text-binder-subtext mb-1">Nama Lengkap *</label>
+            <input type="text" id="edit-prof-name" class="w-full bg-white border border-binder-sand rounded-lg p-2 text-xs font-bold text-binder-text">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-binder-subtext mb-1">NIM *</label>
+            <input type="text" id="edit-prof-nim" class="w-full bg-white border border-binder-sand rounded-lg p-2 text-xs font-mono font-bold text-binder-text">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-binder-subtext mb-1">Perguruan Tinggi / Universitas *</label>
+          <input type="text" id="edit-prof-uni" class="w-full bg-white border border-binder-sand rounded-lg p-2 text-xs text-binder-text">
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-semibold text-binder-subtext mb-1">Fakultas</label>
+            <input type="text" id="edit-prof-faculty" class="w-full bg-white border border-binder-sand rounded-lg p-2 text-xs text-binder-text">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-binder-subtext mb-1">Program Studi / Jurusan</label>
+            <input type="text" id="edit-prof-prog" class="w-full bg-white border border-binder-sand rounded-lg p-2 text-xs text-binder-text">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2">
+          <div>
+            <label class="block text-xs font-semibold text-binder-subtext mb-1">Semester Aktif</label>
+            <select id="edit-prof-semester" class="w-full bg-white border border-binder-sand rounded-lg p-2 text-xs font-bold text-binder-espresso">
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+              <option value="6">6</option>
+              <option value="7">7</option>
+              <option value="8">8</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-binder-subtext mb-1">Kelas</label>
+            <input type="text" id="edit-prof-class" placeholder="IKOM-3A" class="w-full bg-white border border-binder-sand rounded-lg p-2 text-xs text-binder-text">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-binder-subtext mb-1">Tahun Akademik</label>
+            <input type="text" id="edit-prof-year" placeholder="2024/2025" class="w-full bg-white border border-binder-sand rounded-lg p-2 text-xs text-binder-text">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-binder-subtext mb-1">Status Akademik</label>
+          <input type="text" id="edit-prof-status" value="Mahasiswa Aktif" class="w-full bg-white border border-binder-sand rounded-lg p-2 text-xs text-binder-text">
+        </div>
+      </div>
+
+      <div class="bg-binder-card px-4 py-3 flex justify-end space-x-2 border-t border-binder-sand">
+        <button onclick="closeEditProfileModal()" class="px-4 py-2 rounded-lg text-xs font-semibold text-binder-subtext hover:bg-binder-sand">Batal</button>
+        <button onclick="saveProfileFromModal()" class="px-4 py-2 rounded-lg text-xs font-bold bg-binder-espresso text-white hover:bg-binder-caramel shadow">Simpan Identitas</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: SETTINGS / PENGATURAN & API KEY -->
+  <div id="modal-settings" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-3">
+    <div class="bg-binder-cream w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      <div class="bg-binder-espresso text-white px-4 py-3 flex items-center justify-between">
+        <h3 class="font-serif font-bold text-base">⚙️ Pengaturan & Konfigurasi Sistem</h3>
+        <button onclick="closeSettingsModal()" class="text-white hover:text-gray-300 font-bold">✕</button>
+      </div>
+
+      <div class="p-4 space-y-4 overflow-y-auto flex-1">
+        <!-- Gemini AI Settings -->
+        <div class="bg-white p-3.5 rounded-xl border border-binder-sand space-y-2">
+          <div class="flex items-center justify-between">
+            <h4 class="font-bold text-xs text-binder-espresso flex items-center space-x-1.5">
+              <span>✨ Google Gemini AI Key</span>
+            </h4>
+            <span class="text-[10px] bg-binder-gold text-binder-espresso px-2 py-0.5 rounded font-bold">Cloud AI</span>
+          </div>
+          <p class="text-[11px] text-binder-subtext leading-relaxed">
+            Kunci API digunakan untuk transkripsi audio, perangkum 8 struktur, dan tutor tanya-jawab perkuliahan.
+          </p>
+          <input type="password" id="cfg-gemini-key" placeholder="Masukkan API Key (AIzaSy...)" class="w-full bg-binder-sand/30 border border-binder-sand rounded-lg p-2 text-xs text-binder-text font-mono">
+          <p class="text-[10px] text-binder-caramel">
+            * Dapatkan API Key gratis di <a href="https://aistudio.google.com/app/apikey" target="_blank" class="underline font-bold">Google AI Studio</a>. Jika dikosongkan, sistem tetap berjalan menggunakan engine analisis akademik cerdas.
+          </p>
+        </div>
+
+        <!-- Supabase Cloud Settings -->
+        <div class="bg-white p-3.5 rounded-xl border border-binder-sand space-y-2">
+          <div class="flex items-center justify-between">
+            <h4 class="font-bold text-xs text-binder-espresso flex items-center space-x-1.5">
+              <span>☁️ Database & Sinkronisasi Supabase</span>
+            </h4>
+            <span class="text-[10px] bg-green-100 text-green-800 px-2 py-0.5 rounded font-bold">Cloud DB</span>
+          </div>
+          <p class="text-[11px] text-binder-subtext">
+            Hubungkan proyek Supabase Anda untuk sinkronisasi catatan otomatis antar perangkat (HP & Laptop).
+          </p>
+          <div class="space-y-1.5">
+            <input type="text" id="cfg-supabase-url" placeholder="Supabase Project URL (https://xyz.supabase.co)" class="w-full bg-binder-sand/30 border border-binder-sand rounded-lg p-2 text-xs text-binder-text font-mono">
+            <input type="password" id="cfg-supabase-key" placeholder="Supabase Anon Public Key (eyJ...)" class="w-full bg-binder-sand/30 border border-binder-sand rounded-lg p-2 text-xs text-binder-text font-mono">
+          </div>
+          <p class="text-[10px] text-binder-subtext">
+            * Data selalu dicadangkan otomatis di penyimpanan lokal perangkat sehingga Anda tetap bisa belajar saat offline.
+          </p>
+        </div>
+
+        <!-- Storage & Cache Info -->
+        <div class="bg-white p-3.5 rounded-xl border border-binder-sand space-y-2 text-xs text-binder-subtext">
+          <h4 class="font-bold text-xs text-binder-espresso">📊 Status Penyimpanan Lokal</h4>
+          <div class="flex justify-between text-[11px]">
+            <span>Mata Kuliah: <strong id="cfg-count-courses" class="text-binder-espresso">5</strong></span>
+            <span>Catatan Binder: <strong id="cfg-count-notes" class="text-binder-espresso">8</strong></span>
+            <span>Audio Dosen: <strong id="cfg-count-audio" class="text-binder-espresso">3</strong></span>
+          </div>
+          <button onclick="resetToInitialData()" class="text-[11px] text-binder-terracotta hover:underline font-semibold block pt-1">
+            Muat Ulang Data Contoh Awal (Reset Database Lokal)
+          </button>
+        </div>
+      </div>
+
+      <div class="bg-binder-card px-4 py-3 flex justify-end space-x-2 border-t border-binder-sand">
+        <button onclick="closeSettingsModal()" class="px-4 py-2 rounded-lg text-xs font-semibold text-binder-subtext hover:bg-binder-sand">Tutup</button>
+        <button onclick="saveSettingsFromModal()" class="px-4 py-2 rounded-lg text-xs font-bold bg-binder-espresso text-white hover:bg-binder-caramel shadow">Simpan Pengaturan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: AUTH / AKUN MAHASISWA (SUPABASE) -->
+  <div id="modal-auth" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-3">
+    <div class="bg-binder-cream w-full max-w-md rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+      <div class="bg-binder-espresso text-white px-4 py-3 flex items-center justify-between">
+        <h3 class="font-serif font-bold text-base" id="auth-modal-title">🔐 Akun Mahasiswa</h3>
+        <button onclick="closeAuthModal()" class="text-white hover:text-gray-300 font-bold">✕</button>
+      </div>
+
+      <div class="p-4 space-y-3">
+        <!-- Auth Tabs: Login vs Register -->
+        <div class="flex rounded-lg bg-binder-sand/50 p-1 text-xs font-bold">
+          <button onclick="setAuthMode('login')" id="btn-auth-tab-login" class="flex-1 py-1.5 rounded-md bg-binder-espresso text-white shadow">Masuk (Login)</button>
+          <button onclick="setAuthMode('register')" id="btn-auth-tab-register" class="flex-1 py-1.5 rounded-md text-binder-espresso">Daftar Akun Baru</button>
+        </div>
+
+        <div id="auth-logged-in-view" class="hidden text-center py-4 space-y-3">
+          <div class="w-16 h-16 rounded-full bg-binder-gold text-binder-espresso flex items-center justify-center font-bold text-2xl mx-auto shadow">
+            <span id="auth-user-initial">A</span>
+          </div>
+          <div>
+            <h4 id="auth-user-email" class="font-bold text-sm text-binder-espresso">user@kampus.ac.id</h4>
+            <p class="text-xs text-green-700 font-semibold">● Terhubung dengan Supabase Cloud</p>
+          </div>
+          <button onclick="handleLogout()" class="bg-binder-terracotta hover:bg-red-700 text-white font-bold text-xs py-2 px-4 rounded-lg shadow transition">
+            Keluar (Logout)
+          </button>
+        </div>
+
+        <div id="auth-form-fields" class="space-y-3">
+          <div id="auth-name-container" class="hidden">
+            <label class="block text-xs font-semibold text-binder-subtext mb-1">Nama Mahasiswa</label>
+            <input type="text" id="auth-input-name" placeholder="Ahmad Fadhil" class="w-full bg-white border border-binder-sand rounded-lg p-2 text-xs text-binder-text">
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-binder-subtext mb-1">Email Kampus / Mahasiswa</label>
+            <input type="email" id="auth-input-email" placeholder="12540311761@students.uin-suska.ac.id" class="w-full bg-white border border-binder-sand rounded-lg p-2 text-xs text-binder-text">
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-binder-subtext mb-1">Password</label>
+            <input type="password" id="auth-input-pass" placeholder="Minimal 6 karakter" class="w-full bg-white border border-binder-sand rounded-lg p-2 text-xs text-binder-text">
+          </div>
+
+          <p id="auth-error-msg" class="text-xs text-red-600 hidden font-semibold"></p>
+
+          <button onclick="submitAuthForm()" id="btn-auth-submit" class="w-full py-2.5 rounded-lg text-xs font-bold bg-binder-espresso text-white hover:bg-binder-caramel shadow transition">
+            Masuk Sekarang
+          </button>
+        </div>
+      </div>
+
+      <div class="bg-binder-card px-4 py-2.5 text-center text-[11px] text-binder-subtext border-t border-binder-sand">
+        MY CAMPUS BINDER — Cloud Authentication & Data Persistence
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: SINKRONISASI & CADANGAN ARSIP -->
+  <div id="modal-sync" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-3">
+    <div class="bg-binder-cream w-full max-w-md rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+      <div class="bg-binder-espresso text-white px-4 py-3 flex items-center justify-between">
+        <h3 class="font-serif font-bold text-base">☁️ Backup & Sinkronisasi Cloud</h3>
+        <button onclick="closeSyncModal()" class="text-white hover:text-gray-300 font-bold">✕</button>
+      </div>
+
+      <div class="p-4 space-y-3 text-xs">
+        <p class="text-binder-subtext">
+          Amankan seluruh arsip perkuliahan, lembar binder, transkrip, dan rekaman agar tersimpan permanen dan dapat dipulihkan kapan saja.
+        </p>
+
+        <div class="space-y-2 pt-2">
+          <!-- Cloud Supabase Sync -->
+          <button onclick="triggerSupabaseSync()" class="w-full bg-binder-espresso hover:bg-binder-caramel text-white font-bold p-3 rounded-xl shadow flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <span class="text-lg">☁️</span>
+              <div class="text-left">
+                <p class="font-bold">Sinkronkan ke Supabase Cloud</p>
+                <p class="text-[10px] text-white/80">Kirim data lokal & perbarui dari cloud</p>
+              </div>
+            </div>
+            <span>❯</span>
+          </button>
+
+          <!-- Export JSON -->
+          <button onclick="downloadJsonBackup()" class="w-full bg-white hover:bg-binder-sand text-binder-espresso font-bold p-3 rounded-xl border border-binder-sand shadow-sm flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <span class="text-lg">📥</span>
+              <div class="text-left">
+                <p class="font-bold">Unduh Cadangan JSON Lengkap</p>
+                <p class="text-[10px] text-binder-subtext">Simpan berkas offline di HP / Komputer</p>
+              </div>
+            </div>
+            <span>Unduh</span>
+          </button>
+
+          <!-- Import JSON file -->
+          <div class="bg-white p-3 rounded-xl border border-binder-sand space-y-2">
+            <div class="flex items-center space-x-2">
+              <span class="text-lg">📤</span>
+              <div class="text-left">
+                <p class="font-bold text-binder-espresso">Pulihkan dari Berkas JSON</p>
+                <p class="text-[10px] text-binder-subtext">Pilih file cadangan binder untuk memulihkan</p>
+              </div>
+            </div>
+            <input type="file" id="import-json-file" accept=".json" onchange="handleFileRestore(event)" class="w-full text-[11px] text-binder-subtext file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-binder-sand file:text-binder-espresso hover:file:bg-binder-card">
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-binder-card px-4 py-2.5 text-right border-t border-binder-sand">
+        <button onclick="closeSyncModal()" class="px-4 py-1.5 rounded-lg text-xs font-semibold text-binder-subtext hover:bg-binder-sand">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: UBAH NAMA REKAMAN -->
+  <div id="modal-rename-recording" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-3">
+    <div class="bg-binder-cream w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+      <div class="bg-binder-espresso text-white px-4 py-3 flex items-center justify-between">
+        <h3 class="font-serif font-bold text-base">✏️ Ubah Nama Rekaman</h3>
+        <button onclick="closeRenameModal()" class="text-white hover:text-gray-300 font-bold">✕</button>
+      </div>
+      <div class="p-4 space-y-3">
+        <input type="hidden" id="rename-rec-id">
+        <div>
+          <label class="block text-xs font-semibold text-binder-subtext mb-1">Judul Rekaman Baru</label>
+          <input type="text" id="rename-rec-input" class="w-full bg-white border border-binder-sand rounded-lg p-2 text-xs font-bold text-binder-text">
+        </div>
+      </div>
+      <div class="bg-binder-card px-4 py-2.5 flex justify-end space-x-2 border-t border-binder-sand">
+        <button onclick="closeRenameModal()" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-binder-subtext hover:bg-binder-sand">Batal</button>
+        <button onclick="saveRenameRecording()" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-binder-espresso text-white hover:bg-binder-caramel shadow">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Application Logic (LocalStorage, Web Audio Recording, AI Simulation & Real Gemini Ready) -->
+  <script>
+    // Initial Seed Data
+    const INITIAL_PROFILE = {
+      name: "Ahmad Fadhil",
+      nim: "12540311761",
+      university: "UIN Sultan Syarif Kasim Riau",
+      faculty: "Fakultas Dakwah dan Komunikasi",
+      studyProgram: "Ilmu Komunikasi",
+      className: "IKOM-3A",
+      activeSemester: 3,
+      academicYear: "2024/2025",
+      status: "Mahasiswa Aktif"
+    };
+
+    const INITIAL_COURSES = [
+      { id: 1, semesterId: 3, name: "Komunikasi Bisnis", code: "KOM301", lecturer: "Dr. H. Rusdianto, M.Si", credits: 3, day: "Senin", time: "08:00 - 10:30", room: "Ruang R-302", color: "#4A3525" },
+      { id: 2, semesterId: 3, name: "Teori Komunikasi", code: "KOM302", lecturer: "Prof. Nurul Huda, Ph.D", credits: 3, day: "Selasa", time: "10:45 - 13:15", room: "Auditorium FDK", color: "#6E8B74" },
+      { id: 3, semesterId: 3, name: "Studi Al-Qur'an", code: "UIN104", lecturer: "Dr. M. Ihsan, M.Ag", credits: 2, day: "Rabu", time: "13:30 - 15:10", room: "Lab Agama", color: "#D4AF37" },
+      { id: 4, semesterId: 3, name: "Fotografi Komunikasi", code: "KOM305", lecturer: "Rian Pratama, S.Sn", credits: 3, day: "Kamis", time: "08:00 - 11:20", room: "Studio Foto", color: "#C0705E" },
+      { id: 5, semesterId: 3, name: "Pengantar Ilmu Komunikasi", code: "KOM101", lecturer: "Dra. Hj. Fitriani", credits: 3, day: "Jumat", time: "08:00 - 10:30", room: "Gedung B-101", color: "#4A6572" }
+    ];
+
+    const INITIAL_PAGES = [
+      {
+        id: 1,
+        courseId: 1,
+        meetingNumber: 3,
+        title: "Pengantar Negosiasi & Komunikasi Bisnis Modern",
+        content: "# Pertemuan 3: Negosiasi Bisnis Modern\n\nDosen menekankan persiapan pra-negosiasi (Pre-negotiation planning).\n\n**Poin Utama:**\n• BATNA (Best Alternative to a Negotiated Agreement): Alternatif terbaik jika negosiasi mencapai jalan buntu.\n• ZOPA (Zone of Possible Agreement): Rentang di mana kesepakatan saling menguntungkan dapat dicapai.\n• High-Context vs Low-Context Communication dalam bisnis internasional.\n\n*Catatan Dosen:*\n\"Jangan pernah masuk ke ruang perundingan tanpa mengetahui nilai toleransi minimal tim Anda.\"",
+        paperType: "lined",
+        isImportant: true,
+        date: "30 Okt 2026"
+      },
+      {
+        id: 2,
+        courseId: 2,
+        meetingNumber: 2,
+        title: "Model Shannon-Weaver & Agenda Setting Media",
+        content: "# Model Transmisi & Teori Efek Media\n\nTeori Agenda Setting (McCombs & Shaw, 1972):\nMedia massa tidak memberi tahu masyarakat apa yang harus dipikirkan, melainkan apa yang harus dipikirkan tentang.\n\n**Tiga Tingkatan Agenda:**\n1. Agenda Media (prioritas isu yang disiarkan redaksi)\n2. Agenda Publik (isu yang dipandang urgen oleh masyarakat)\n3. Agenda Kebijakan (agenda tindakan pemerintah)",
+        paperType: "cornell",
+        isImportant: false,
+        date: "28 Okt 2026"
+      }
+    ];
+
+    const INITIAL_RECORDINGS = [
+      {
+        id: 1,
+        courseId: 1,
+        meetingNumber: 3,
+        title: "Penjelasan Pre-negotiation & Kasus Merger",
+        duration: "00:15:20",
+        date: "30 Okt 2026",
+        hasAi: true
+      }
+    ];
+
+    // State
+    let profile = JSON.parse(localStorage.getItem('mcb_profile')) || INITIAL_PROFILE;
+    let courses = JSON.parse(localStorage.getItem('mcb_courses')) || INITIAL_COURSES;
+    let pages = JSON.parse(localStorage.getItem('mcb_pages')) || INITIAL_PAGES;
+    let recordings = JSON.parse(localStorage.getItem('mcb_recordings')) || INITIAL_RECORDINGS;
+
+    let currentSelectedCourseId = courses[0]?.id || 1;
+    let currentSelectedPageIndex = 0;
+    let currentPaperType = 'lined';
+    let selectedCoverColor = '#4A3525';
+    let currentEditingPageId = null;
+    let currentAiPackage = null;
+
+    // Save helpers
+    function persistAll() {
+      localStorage.setItem('mcb_profile', JSON.stringify(profile));
+      localStorage.setItem('mcb_courses', JSON.stringify(courses));
+      localStorage.setItem('mcb_pages', JSON.stringify(pages));
+      localStorage.setItem('mcb_recordings', JSON.stringify(recordings));
+      renderDashboard();
+      renderCoursesGrid();
+      renderRecordingsList();
+    }
+
+    // Switch Tabs
+    function switchTab(tabId) {
+      const tabs = ['home', 'binders', 'binder-detail', 'record', 'ai', 'profile'];
+      tabs.forEach(t => {
+        const el = document.getElementById(`tab-${t}`);
+        if (el) el.classList.add('hidden');
+        const navBtn = document.getElementById(`nav-btn-${t}`);
+        if (navBtn) {
+          navBtn.classList.remove('text-binder-espresso', 'font-bold');
+          navBtn.classList.add('text-binder-subtext');
+        }
+      });
+
+      const target = document.getElementById(`tab-${tabId}`);
+      if (target) target.classList.remove('hidden');
+
+      const activeNav = document.getElementById(`nav-btn-${tabId}`);
+      if (activeNav) {
+        activeNav.classList.remove('text-binder-subtext');
+        activeNav.classList.add('text-binder-espresso', 'font-bold');
+      }
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Render Dashboard
+    function renderDashboard() {
+      document.getElementById('home-greeting').innerText = `Halo, ${profile.name}! 📚`;
+      document.getElementById('home-campus-info').innerText = `${profile.university} • ${profile.studyProgram} • Semester ${profile.activeSemester}`;
+      document.getElementById('home-active-sem-badge').innerText = profile.activeSemester;
+
+      document.getElementById('stat-courses').innerText = `${courses.length} MK`;
+      document.getElementById('stat-notes').innerText = `${pages.length} Lembar`;
+      document.getElementById('stat-records').innerText = `${recordings.length} Audio`;
+
+      // Schedule
+      const scheduleList = document.getElementById('schedule-list');
+      scheduleList.innerHTML = courses.slice(0, 4).map(c => `
+        <div class="flex items-center justify-between p-2.5 rounded-lg bg-binder-cream/70 hover:bg-binder-sand cursor-pointer transition border border-binder-sand/50" onclick="openCourseBinder(${c.id})">
+          <div class="flex items-center space-x-2.5">
+            <span class="w-2.5 h-2.5 rounded-full" style="background-color: ${c.color}"></span>
+            <div>
+              <p class="font-bold text-xs md:text-sm text-binder-espresso">${c.name}</p>
+              <p class="text-[11px] text-binder-subtext">${c.lecturer} • ${c.room}</p>
+            </div>
+          </div>
+          <span class="text-[11px] font-semibold bg-white px-2 py-0.5 rounded shadow-sm text-binder-espresso">${c.day}, ${c.time}</span>
+        </div>
+      `).join('');
+
+      // Recent notes
+      const recentList = document.getElementById('recent-notes-list');
+      recentList.innerHTML = pages.slice(0, 3).map(p => {
+        const c = courses.find(x => x.id === p.courseId) || { name: 'Mata Kuliah' };
+        return `
+          <div class="p-2.5 rounded-lg bg-binder-cream/70 hover:bg-binder-sand cursor-pointer transition border border-binder-sand/50 flex items-center justify-between" onclick="openCourseBinder(${p.courseId})">
+            <div>
+              <p class="font-bold text-xs md:text-sm text-binder-espresso">${p.title}</p>
+              <p class="text-[11px] text-binder-subtext">${c.name} • Pertemuan ke-${p.meetingNumber}</p>
+            </div>
+            <span class="text-binder-caramel text-xs font-bold">Buka ❯</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Render Courses Grid (Binder Saya)
+    function renderCoursesGrid() {
+      const grid = document.getElementById('courses-grid');
+      grid.innerHTML = courses.map(c => {
+        const coursePages = pages.filter(p => p.courseId === c.id);
+        const courseRecs = recordings.filter(r => r.courseId === c.id);
+        return `
+          <div class="rounded-2xl p-4 shadow-md text-white flex justify-between cursor-pointer transform hover:-translate-y-1 transition border-2 border-black/10" style="background-color: ${c.color}" onclick="openCourseBinder(${c.id})">
+            <div class="flex space-x-3 w-full">
+              <!-- Binder Spine Effect -->
+              <div class="w-7 bg-black/20 rounded-lg flex flex-col justify-around py-3 items-center">
+                <div class="w-3.5 h-1.5 bg-binder-gold rounded-full"></div>
+                <div class="w-3.5 h-1.5 bg-binder-gold rounded-full"></div>
+                <div class="w-3.5 h-1.5 bg-binder-gold rounded-full"></div>
+              </div>
+
+              <!-- Cover Info -->
+              <div class="flex-1 flex flex-col justify-between py-1">
+                <div>
+                  <div class="flex justify-between items-center text-[10px] text-white/80 mb-1">
+                    <span class="bg-white/20 px-1.5 py-0.5 rounded font-mono">${c.code} • ${c.credits} SKS</span>
+                    <span>${c.day}, ${c.time}</span>
+                  </div>
+                  <h3 class="font-serif font-bold text-lg leading-snug drop-shadow">${c.name}</h3>
+                  <p class="text-xs text-white/90 line-clamp-1">${c.lecturer}</p>
+                </div>
+
+                <div class="flex justify-between items-center text-[11px] pt-3 text-white/80 border-t border-white/20 mt-2">
+                  <span>📖 ${coursePages.length} Catatan • 🎙️ ${courseRecs.length} Audio</span>
+                  <span class="text-binder-gold font-bold">Buka ❯</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Also update record course dropdown
+      const recordSelect = document.getElementById('record-course-select');
+      if (recordSelect) {
+        recordSelect.innerHTML = courses.map(c => `<option value="${c.id}">${c.name} (${c.lecturer})</option>`).join('');
+      }
+    }
+
+    // Open Course Binder & Notebook View
+    function openCourseBinder(courseId) {
+      currentSelectedCourseId = courseId;
+      currentSelectedPageIndex = 0;
+      const c = courses.find(x => x.id === courseId);
+      if (!c) return;
+
+      document.getElementById('detail-course-name').innerText = c.name;
+      document.getElementById('detail-course-lecturer').innerText = `${c.lecturer} • ${c.credits} SKS • ${c.room}`;
+      
+      renderBinderSheet();
+      switchTab('binder-detail');
+    }
+
+    // Render Notebook Page Content
+    function renderBinderSheet() {
+      const coursePages = pages.filter(p => p.courseId === currentSelectedCourseId);
+      const counterBadge = document.getElementById('page-counter-badge');
+      const btnPrev = document.getElementById('btn-prev-page');
+      const btnNext = document.getElementById('btn-next-page');
+
+      if (coursePages.length === 0) {
+        counterBadge.innerText = 'Hal 0 / 0';
+        document.getElementById('sheet-note-title').innerText = 'Belum Ada Lembar Catatan';
+        document.getElementById('sheet-note-body').innerText = 'Buku catatan masih kosong. Klik tombol "+ Tulis Catatan" di atas untuk mulai mencatat materi dosen pada pertemuan pertama.';
+        document.getElementById('sheet-meeting-badge').innerText = 'Kosong';
+        btnPrev.disabled = true;
+        btnNext.disabled = true;
+        return;
+      }
+
+      if (currentSelectedPageIndex >= coursePages.length) {
+        currentSelectedPageIndex = coursePages.length - 1;
+      }
+
+      const activePage = coursePages[currentSelectedPageIndex];
+      counterBadge.innerText = `Hal ${currentSelectedPageIndex + 1} / ${coursePages.length}`;
+      btnPrev.disabled = currentSelectedPageIndex === 0;
+      btnNext.disabled = currentSelectedPageIndex === coursePages.length - 1;
+
+      document.getElementById('sheet-note-title').innerText = activePage.title;
+      document.getElementById('sheet-note-body').innerText = activePage.content;
+      document.getElementById('sheet-meeting-badge').innerText = `Pertemuan ke-${activePage.meetingNumber}`;
+      document.getElementById('sheet-date-badge').innerText = activePage.date || '30 Okt 2026';
+      document.getElementById('sheet-bookmark-badge').style.display = activePage.isImportant ? 'inline' : 'none';
+
+      setPaperType(activePage.paperType || 'lined', false);
+    }
+
+    function prevPage() {
+      if (currentSelectedPageIndex > 0) {
+        currentSelectedPageIndex--;
+        renderBinderSheet();
+      }
+    }
+
+    function nextPage() {
+      const coursePages = pages.filter(p => p.courseId === currentSelectedCourseId);
+      if (currentSelectedPageIndex < coursePages.length - 1) {
+        currentSelectedPageIndex++;
+        renderBinderSheet();
+      }
+    }
+
+    // Set Paper Type styling
+    function setPaperType(type, updatePage = true) {
+      currentPaperType = type;
+      const sheet = document.getElementById('binder-paper-sheet');
+      sheet.className = `min-h-[460px] md:min-h-[560px] rounded-xl pl-16 pr-5 py-6 shadow-inner relative z-10 transition-all duration-200 binder-paper-${type}`;
+
+      ['lined', 'grid', 'blank', 'cornell'].forEach(t => {
+        const btn = document.getElementById(`btn-paper-${t}`);
+        if (btn) {
+          if (t === type) {
+            btn.className = 'px-2 py-1 rounded bg-binder-caramel text-white font-semibold';
+          } else {
+            btn.className = 'px-2 py-1 rounded bg-binder-sand text-binder-espresso';
+          }
+        }
+      });
+
+      if (updatePage) {
+        const coursePages = pages.filter(p => p.courseId === currentSelectedCourseId);
+        if (coursePages[currentSelectedPageIndex]) {
+          coursePages[currentSelectedPageIndex].paperType = type;
+          persistAll();
+        }
+      }
+    }
+
+    // Note Editor Modal
+    function openNoteEditor(pageId = null) {
+      currentEditingPageId = pageId;
+      const modal = document.getElementById('modal-note-editor');
+      const titleInput = document.getElementById('edit-note-title');
+      const contentInput = document.getElementById('edit-note-content');
+      const meetingInput = document.getElementById('edit-note-meeting');
+      const paperInput = document.getElementById('edit-note-papertype');
+
+      if (pageId) {
+        const p = pages.find(x => x.id === pageId);
+        if (p) {
+          document.getElementById('editor-modal-title').innerText = 'Edit Lembar Catatan';
+          titleInput.value = p.title;
+          contentInput.value = p.content;
+          meetingInput.value = p.meetingNumber;
+          paperInput.value = p.paperType || 'lined';
+        }
+      } else {
+        document.getElementById('editor-modal-title').innerText = 'Tulis Catatan Kuliah Baru';
+        titleInput.value = '';
+        contentInput.value = '';
+        const coursePages = pages.filter(x => x.courseId === currentSelectedCourseId);
+        meetingInput.value = (coursePages.length + 1);
+        paperInput.value = currentPaperType;
+      }
+
+      modal.classList.remove('hidden');
+    }
+
+    function closeNoteEditor() {
+      document.getElementById('modal-note-editor').classList.add('hidden');
+      currentEditingPageId = null;
+    }
+
+    function saveNoteFromEditor() {
+      const title = document.getElementById('edit-note-title').value.trim();
+      const content = document.getElementById('edit-note-content').value.trim();
+      const meeting = parseInt(document.getElementById('edit-note-meeting').value) || 1;
+      const paper = document.getElementById('edit-note-papertype').value;
+
+      if (!title) {
+        alert('Silakan masukkan judul materi kuliah terlebih dahulu.');
+        return;
+      }
+
+      if (currentEditingPageId) {
+        const p = pages.find(x => x.id === currentEditingPageId);
+        if (p) {
+          p.title = title;
+          p.content = content;
+          p.meetingNumber = meeting;
+          p.paperType = paper;
+        }
+      } else {
+        const newPage = {
+          id: Date.now(),
+          courseId: currentSelectedCourseId,
+          meetingNumber: meeting,
+          title: title,
+          content: content,
+          paperType: paper,
+          isImportant: false,
+          date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+        };
+        pages.push(newPage);
+        currentSelectedPageIndex = pages.filter(x => x.courseId === currentSelectedCourseId).length - 1;
+      }
+
+      persistAll();
+      closeNoteEditor();
+      renderBinderSheet();
+    }
+
+    function editCurrentPage() {
+      const coursePages = pages.filter(p => p.courseId === currentSelectedCourseId);
+      if (coursePages[currentSelectedPageIndex]) {
+        openNoteEditor(coursePages[currentSelectedPageIndex].id);
+      }
+    }
+
+    function deleteCurrentPage() {
+      const coursePages = pages.filter(p => p.courseId === currentSelectedCourseId);
+      if (coursePages[currentSelectedPageIndex]) {
+        if (confirm('Hapus lembar catatan ini dari binder?')) {
+          const targetId = coursePages[currentSelectedPageIndex].id;
+          pages = pages.filter(p => p.id !== targetId);
+          persistAll();
+          currentSelectedPageIndex = Math.max(0, currentSelectedPageIndex - 1);
+          renderBinderSheet();
+        }
+      }
+    }
+
+    // Helper: Hex color to RGB object
+    function hexToRgb(hex) {
+      hex = (hex || '#4A3525').replace('#', '');
+      if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
+      const num = parseInt(hex, 16);
+      return {
+        r: (num >> 16) & 255,
+        g: (num >> 8) & 255,
+        b: num & 255
+      };
+    }
+
+    // Helper: Draw Binder Page Shell (Header, Gold Rings, Margin Line, Footer)
+    function drawBinderPageShell(doc, course, meetingNo, pageTitle, dateStr, pageNum, totalPages) {
+      // 1. Top Header Banner (Espresso & Gold)
+      doc.setFillColor(74, 53, 37); // #4A3525
+      doc.rect(0, 0, 210, 26, 'F');
+
+      doc.setFillColor(212, 175, 55); // #D4AF37 Gold Accent
+      doc.rect(0, 26, 210, 1.5, 'F');
+
+      // Header Brand & Campus Details
+      doc.setTextColor(212, 175, 55);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(13);
+      doc.text('MY CAMPUS BINDER', 18, 10);
+
+      doc.setTextColor(255, 255, 255);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8.5);
+      doc.text(`${profile.university} • ${profile.faculty} • ${profile.studyProgram}`, 18, 16);
+
+      doc.setFontSize(7.5);
+      doc.setTextColor(230, 220, 210);
+      doc.text(`Mahasiswa: ${profile.name} (NIM: ${profile.nim}) | Semester ${profile.activeSemester} | Kelas: ${profile.studentClass}`, 18, 22);
+
+      // 2. Simulated 6 Gold Metallic Ring Punch Holes on Left Gutter
+      const ringYCoords = [45, 85, 125, 175, 215, 255];
+      ringYCoords.forEach(y => {
+        // Outer hole
+        doc.setFillColor(236, 227, 212);
+        doc.circle(9, y, 3.2, 'F');
+        doc.setDrawColor(180, 160, 140);
+        doc.setLineWidth(0.3);
+        doc.circle(9, y, 3.2, 'D');
+
+        // Inner metallic ring highlight
+        doc.setFillColor(184, 134, 11);
+        doc.circle(9, y, 1.8, 'F');
+      });
+
+      // 3. Notebook Margin Guide Line (Aesthetic Red/Pink Margin)
+      doc.setDrawColor(229, 115, 113); // #E57373
+      doc.setLineWidth(0.4);
+      doc.line(22, 30, 22, 282);
+
+      // 4. Course Metadata Strip (below header)
+      doc.setFillColor(246, 240, 230); // #F6F0E6
+      doc.roundedRect(26, 31, 174, 14, 2, 2, 'F');
+      doc.setDrawColor(210, 195, 175);
+      doc.setLineWidth(0.2);
+      doc.roundedRect(26, 31, 174, 14, 2, 2, 'D');
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10);
+      doc.setTextColor(74, 53, 37);
+      doc.text(`${course.name} (${course.code || 'MK'})`, 30, 37);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor(108, 96, 87);
+      doc.text(`Dosen: ${course.lecturer} | ${course.credits} SKS | ${course.room || 'Ruang Kuliah'}`, 30, 42);
+
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(158, 113, 84);
+      doc.text(`Pertemuan Ke-${meetingNo}`, 160, 37);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7.5);
+      doc.setTextColor(108, 96, 87);
+      doc.text(dateStr || '30 Okt 2026', 160, 42);
+
+      // 5. Page Footer
+      doc.setDrawColor(210, 195, 175);
+      doc.setLineWidth(0.3);
+      doc.line(22, 285, 200, 285);
+
+      doc.setFont('helvetica', 'italic');
+      doc.setFontSize(7.5);
+      doc.setTextColor(140, 130, 120);
+      doc.text('MY CAMPUS BINDER — Arsip Akademik Seumur Hidup & Catatan Kuliah Digital', 26, 290);
+      
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Hal ${pageNum} / ${totalPages}`, 180, 290);
+    }
+
+    // CUJ: Ekspor Lembar Catatan Aktif ke File PDF (jsPDF)
+    function exportCurrentNoteToPdf() {
+      const jsPDFClass = window.jspdf ? window.jspdf.jsPDF : (window.jsPDF || null);
+      if (!jsPDFClass) {
+        alert('Library jsPDF belum selesai dimuat. Periksa koneksi internet Anda lalu coba kembali.');
+        return;
+      }
+
+      const coursePages = pages.filter(p => p.courseId === currentSelectedCourseId);
+      const c = courses.find(x => x.id === currentSelectedCourseId) || { name: 'Mata Kuliah', lecturer: 'Dosen Pengampu', credits: 3 };
+      
+      if (!coursePages || coursePages.length === 0 || !coursePages[currentSelectedPageIndex]) {
+        alert('Tidak ada lembar catatan yang dipilih untuk diekspor.');
+        return;
+      }
+
+      const p = coursePages[currentSelectedPageIndex];
+      const doc = new jsPDFClass({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+      // First pass: Calculate pagination lines
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      const textLines = doc.splitTextToSize(p.content || '(Catatan ini masih kosong)', 170);
+      
+      const maxLinesPerPage = 34;
+      const totalPages = Math.max(1, Math.ceil(textLines.length / maxLinesPerPage));
+
+      for (let pageIdx = 0; pageIdx < totalPages; pageIdx++) {
+        if (pageIdx > 0) doc.addPage();
+
+        drawBinderPageShell(doc, c, p.meetingNumber, p.title, p.date, pageIdx + 1, totalPages);
+
+        // Render Title on Page 1
+        let currentY = 54;
+        if (pageIdx === 0) {
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(14);
+          doc.setTextColor(74, 53, 37);
+          const titleLines = doc.splitTextToSize(p.title, 170);
+          titleLines.forEach(tl => {
+            doc.text(tl, 26, currentY);
+            currentY += 6;
+          });
+
+          // Red rule under title
+          doc.setDrawColor(212, 175, 55);
+          doc.setLineWidth(0.5);
+          doc.line(26, currentY, 195, currentY);
+          currentY += 6;
+        } else {
+          currentY = 52;
+          doc.setFont('helvetica', 'italic');
+          doc.setFontSize(9);
+          doc.setTextColor(150, 140, 130);
+          doc.text(`(Lanjutan Pertemuan Ke-${p.meetingNumber}: ${p.title})`, 26, currentY);
+          currentY += 6;
+        }
+
+        // Render Page Body Lines
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(10);
+        doc.setTextColor(44, 36, 30);
+
+        const startLine = pageIdx * maxLinesPerPage;
+        const endLine = Math.min(startLine + maxLinesPerPage, textLines.length);
+
+        for (let i = startLine; i < endLine; i++) {
+          const line = textLines[i];
+          // Style bold headers if lines start with '#' or '**'
+          if (line.startsWith('#') || line.startsWith('**')) {
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(74, 53, 37);
+            doc.text(line.replace(/[#*]/g, '').trim(), 26, currentY);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(44, 36, 30);
+          } else {
+            doc.text(line, 26, currentY);
+          }
+          currentY += 6.2;
+        }
+      }
+
+      // Sanitize filename
+      const cleanTitle = (p.title || 'Catatan').replace(/[^a-zA-Z0-9_\-]/g, '_').slice(0, 30);
+      const cleanCourse = (c.name || 'Kuliah').replace(/[^a-zA-Z0-9_\-]/g, '_').slice(0, 20);
+      const fileName = `Catatan_${cleanCourse}_Pert_${p.meetingNumber}_${cleanTitle}.pdf`;
+
+      doc.save(fileName);
+      alert(`Catatan "${p.title}" berhasil diunduh sebagai file PDF (${fileName})!`);
+    }
+
+    // CUJ: Ekspor Seluruh Binder Mata Kuliah (Semua Halaman) ke PDF
+    function exportFullBinderToPdf() {
+      const jsPDFClass = window.jspdf ? window.jspdf.jsPDF : (window.jsPDF || null);
+      if (!jsPDFClass) {
+        alert('Library jsPDF belum siap.');
+        return;
+      }
+
+      const coursePages = pages.filter(p => p.courseId === currentSelectedCourseId);
+      const c = courses.find(x => x.id === currentSelectedCourseId) || { name: 'Mata Kuliah', lecturer: 'Dosen', credits: 3 };
+
+      if (!coursePages || coursePages.length === 0) {
+        alert('Binder mata kuliah ini belum memiliki lembar catatan.');
+        return;
+      }
+
+      const doc = new jsPDFClass({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+      // 1. Cover Page
+      const rgb = hexToRgb(c.color || '#4A3525');
+      doc.setFillColor(rgb.r, rgb.g, rgb.b);
+      doc.rect(0, 0, 210, 297, 'F');
+
+      // Metallic frame border
+      doc.setDrawColor(212, 175, 55);
+      doc.setLineWidth(1.5);
+      doc.rect(12, 12, 186, 273, 'D');
+
+      doc.setLineWidth(0.5);
+      doc.rect(15, 15, 180, 267, 'D');
+
+      // Cover Texts
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(14);
+      doc.setTextColor(212, 175, 55);
+      doc.text('MY CAMPUS BINDER', 105, 55, { align: 'center' });
+
+      doc.setFontSize(9);
+      doc.setTextColor(255, 255, 255);
+      doc.text('BUKU CATATAN PERKULIAHAN LENGKAP', 105, 62, { align: 'center' });
+
+      // Course title banner box
+      doc.setFillColor(255, 255, 255);
+      doc.roundedRect(30, 95, 150, 48, 4, 4, 'F');
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(18);
+      doc.setTextColor(74, 53, 37);
+      doc.text(c.name, 105, 115, { align: 'center' });
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(11);
+      doc.setTextColor(110, 90, 80);
+      doc.text(`Dosen: ${c.lecturer} • ${c.credits} SKS`, 105, 125, { align: 'center' });
+      doc.text(`Kode: ${c.code || 'MK'} • ${c.room || 'Ruang Kuliah'}`, 105, 133, { align: 'center' });
+
+      // Student info on cover bottom
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      doc.setTextColor(255, 255, 255);
+      doc.text(`Disusun Oleh:`, 105, 205, { align: 'center' });
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(12);
+      doc.setTextColor(212, 175, 55);
+      doc.text(profile.name, 105, 213, { align: 'center' });
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      doc.setTextColor(230, 230, 230);
+      doc.text(`NIM: ${profile.nim} | Semester ${profile.activeSemester} | ${profile.studyProgram}`, 105, 220, { align: 'center' });
+      doc.text(profile.university, 105, 227, { align: 'center' });
+
+      doc.setFontSize(8.5);
+      doc.setTextColor(200, 200, 200);
+      doc.text(`Total: ${coursePages.length} Lembar Catatan Perkuliahan`, 105, 255, { align: 'center' });
+
+      // 2. Each Note Page in Binder
+      coursePages.forEach((p, idx) => {
+        doc.addPage();
+        drawBinderPageShell(doc, c, p.meetingNumber, p.title, p.date, idx + 1, coursePages.length);
+
+        let currentY = 54;
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(14);
+        doc.setTextColor(74, 53, 37);
+        const titleLines = doc.splitTextToSize(p.title, 170);
+        titleLines.forEach(tl => {
+          doc.text(tl, 26, currentY);
+          currentY += 6;
+        });
+
+        doc.setDrawColor(212, 175, 55);
+        doc.setLineWidth(0.5);
+        doc.line(26, currentY, 195, currentY);
+        currentY += 6;
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(10);
+        doc.setTextColor(44, 36, 30);
+
+        const lines = doc.splitTextToSize(p.content || '', 170);
+        lines.forEach(line => {
+          if (currentY > 275) {
+            doc.addPage();
+            drawBinderPageShell(doc, c, p.meetingNumber, p.title, p.date, idx + 1, coursePages.length);
+            currentY = 52;
+          }
+          if (line.startsWith('#') || line.startsWith('**')) {
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(74, 53, 37);
+            doc.text(line.replace(/[#*]/g, '').trim(), 26, currentY);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(44, 36, 30);
+          } else {
+            doc.text(line, 26, currentY);
+          }
+          currentY += 6;
+        });
+      });
+
+      const cleanCourse = (c.name || 'Kuliah').replace(/[^a-zA-Z0-9_\-]/g, '_');
+      const fileName = `Binder_Lengkap_${cleanCourse}_Semester_${profile.activeSemester}.pdf`;
+      doc.save(fileName);
+      alert(`Seluruh binder "${c.name}" (${coursePages.length} catatan) berhasil diekspor ke PDF (${fileName})!`);
+    }
+
+    // CUJ: Ekspor Paket Hasil AI (Resume 8 Struktur + Transkrip) ke PDF
+    function exportAiPackageToPdf() {
+      const jsPDFClass = window.jspdf ? window.jspdf.jsPDF : (window.jsPDF || null);
+      if (!jsPDFClass) {
+        alert('Library jsPDF belum tersedia.');
+        return;
+      }
+
+      if (!currentAiPackage) {
+        alert('Belum ada paket resume AI yang aktif.');
+        return;
+      }
+
+      const doc = new jsPDFClass({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const c = courses.find(x => x.id === currentAiPackage.courseId) || courses[0] || { name: 'Mata Kuliah', lecturer: 'Dosen' };
+
+      // Header Banner
+      doc.setFillColor(74, 53, 37);
+      doc.rect(0, 0, 210, 28, 'F');
+      doc.setFillColor(212, 175, 55);
+      doc.rect(0, 28, 210, 2, 'F');
+
+      doc.setTextColor(212, 175, 55);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(14);
+      doc.text('MY CAMPUS BINDER — AI STUDY REPORT', 18, 12);
+
+      doc.setTextColor(255, 255, 255);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8.5);
+      doc.text(`${profile.university} • ${profile.studyProgram} • Mahasiswa: ${profile.name} (${profile.nim})`, 18, 18);
+      doc.text(`Paket AI Perkuliahan: Satu Rekaman → Satu Catatan Lengkap`, 18, 24);
+
+      let curY = 40;
+
+      // Title Box
+      doc.setFillColor(246, 240, 230);
+      doc.roundedRect(16, curY, 178, 16, 2, 2, 'F');
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(12);
+      doc.setTextColor(74, 53, 37);
+      doc.text(currentAiPackage.title, 20, curY + 7);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8.5);
+      doc.setTextColor(110, 90, 80);
+      doc.text(`${c.name} • Pertemuan Ke-${currentAiPackage.meetingNumber} • Dosen: ${c.lecturer}`, 20, curY + 12);
+
+      curY += 22;
+
+      // Helper function to render a section
+      function addAiSection(title, content, bgColor = [236, 227, 212]) {
+        if (!content) return;
+        if (curY > 245) {
+          doc.addPage();
+          curY = 25;
+        }
+
+        // Section header
+        doc.setFillColor(bgColor[0], bgColor[1], bgColor[2]);
+        doc.roundedRect(16, curY, 178, 7, 1.5, 1.5, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9.5);
+        doc.setTextColor(74, 53, 37);
+        doc.text(title, 20, curY + 5);
+        curY += 10;
+
+        // Section body
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8.5);
+        doc.setTextColor(40, 35, 30);
+        const lines = doc.splitTextToSize(content, 174);
+        lines.forEach(l => {
+          if (curY > 275) {
+            doc.addPage();
+            curY = 25;
+          }
+          if (l.startsWith('#') || l.startsWith('**') || /^[0-9]+\./.test(l)) {
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(74, 53, 37);
+            doc.text(l.replace(/[#*]/g, ''), 18, curY);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(40, 35, 30);
+          } else {
+            doc.text(l, 18, curY);
+          }
+          curY += 5.2;
+        });
+        curY += 4;
+      }
+
+      addAiSection('1. RESUME AKADEMIK 8 STRUKTUR (RINGKASAN DOSEN)', currentAiPackage.summary, [255, 236, 179]);
+      addAiSection('2. CATATAN TERSTRUKTUR & POKOK PEMBAHASAN', currentAiPackage.structured, [236, 227, 212]);
+      addAiSection('3. DAFTAR ISTILAH & DEFINISI PENTING', currentAiPackage.definitions, [232, 245, 233]);
+      addAiSection('4. TRANSKRIP REKAMAN PERKULIAHAN (AUDIO TO TEXT)', currentAiPackage.transcript, [227, 242, 253]);
+      addAiSection('5. KESIMPULAN PERKULIAHAN', currentAiPackage.conclusion, [243, 229, 245]);
+
+      // Footer
+      const totalP = doc.getNumberOfPages();
+      for (let i = 1; i <= totalP; i++) {
+        doc.setPage(i);
+        doc.setDrawColor(210, 195, 175);
+        doc.setLineWidth(0.2);
+        doc.line(16, 288, 194, 288);
+        doc.setFont('helvetica', 'italic');
+        doc.setFontSize(7.5);
+        doc.setTextColor(140, 130, 120);
+        doc.text('MY CAMPUS BINDER — Generated by AI Academic Engine', 18, 292);
+        doc.text(`Hal ${i} / ${totalP}`, 180, 292);
+      }
+
+      const fileName = `AI_Resume_${(c.name || 'Kuliah').replace(/\s+/g, '_')}_Pert_${currentAiPackage.meetingNumber}.pdf`;
+      doc.save(fileName);
+      alert(`Paket AI Lengkap berhasil diekspor ke PDF (${fileName})!`);
+    }
+
+    // Salin Teks Catatan ke Clipboard
+    function copyCurrentNoteText() {
+      const coursePages = pages.filter(p => p.courseId === currentSelectedCourseId);
+      const c = courses.find(x => x.id === currentSelectedCourseId) || { name: 'Kuliah' };
+      if (coursePages[currentSelectedPageIndex]) {
+        const p = coursePages[currentSelectedPageIndex];
+        const text = `MY CAMPUS BINDER - ${c.name}\nPertemuan ${p.meetingNumber}: ${p.title}\nTanggal: ${p.date}\n\n${p.content}`;
+        navigator.clipboard.writeText(text);
+        alert('Teks catatan disalin ke clipboard!');
+      }
+    }
+
+    // Alias for backward compatibility
+    function exportCurrentNote() {
+      exportCurrentNoteToPdf();
+    }
+
+    function insertFormat(tag) {
+      const textarea = document.getElementById('edit-note-content');
+      textarea.value += tag;
+      textarea.focus();
+    }
+
+    // Add Course Modal
+    function openAddCourseModal() {
+      document.getElementById('modal-add-course').classList.remove('hidden');
+    }
+    function closeAddCourseModal() {
+      document.getElementById('modal-add-course').classList.add('hidden');
+    }
+    function selectCoverColor(hex) {
+      selectedCoverColor = hex;
+      document.querySelectorAll('.color-choice').forEach(b => b.classList.remove('ring-2', 'ring-binder-espresso'));
+      event.target.classList.add('ring-2', 'ring-binder-espresso');
+    }
+
+    function saveNewCourse() {
+      const name = document.getElementById('add-c-name').value.trim();
+      const code = document.getElementById('add-c-code').value.trim() || 'MK';
+      const credits = parseInt(document.getElementById('add-c-credits').value) || 3;
+      const lecturer = document.getElementById('add-c-lecturer').value.trim() || '-';
+      const schedule = document.getElementById('add-c-schedule').value.trim() || 'Senin, 08:00';
+      const room = document.getElementById('add-c-room').value.trim() || 'Ruang R-302';
+
+      if (!name) {
+        alert('Silakan masukkan nama mata kuliah.');
+        return;
+      }
+
+      const newCourse = {
+        id: Date.now(),
+        semesterId: profile.activeSemester,
+        name: name,
+        code: code,
+        lecturer: lecturer,
+        credits: credits,
+        day: schedule.split(',')[0] || 'Senin',
+        time: schedule.split(',')[1] || '08:00',
+        room: room,
+        color: selectedCoverColor
+      };
+
+      courses.push(newCourse);
+      persistAll();
+      closeAddCourseModal();
+      openCourseBinder(newCourse.id);
+    }
+
+    // ==========================================
+    // AUDIO RECORDER & LIVE WAVEFORM VISUALIZER
+    // ==========================================
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let recordInterval = null;
+    let recordSeconds = 0;
+    let isRecordingAudio = false;
+    let isRecordingPaused = false;
+    let activeAudioPlayer = null;
+    let currentlyPlayingRecId = null;
+    let speechRecognizer = null;
+    let recognizedTranscript = '';
+
+    // Web Audio Canvas Visualizer
+    const canvas = document.getElementById('waveform-canvas');
+    const ctx = canvas ? canvas.getContext('2d') : null;
+    let audioContext = null;
+    let analyser = null;
+    let dataArray = null;
+    let animationFrameId = null;
+
+    function drawWave() {
+      animationFrameId = requestAnimationFrame(drawWave);
+      if (!analyser || !ctx || !canvas) return;
+
+      analyser.getByteFrequencyData(dataArray);
+      ctx.fillStyle = '#F6F0E6';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      const barWidth = (canvas.width / 32);
+      let x = 0;
+
+      for (let i = 0; i < 32; i++) {
+        const barHeight = (dataArray[i * 2] / 255) * canvas.height;
+        ctx.fillStyle = isRecordingPaused ? '#9E7154' : '#C0705E';
+        ctx.fillRect(x, canvas.height - barHeight, barWidth - 2, barHeight);
+        x += barWidth;
+      }
+    }
+
+    async function toggleRecording() {
+      const btnStart = document.getElementById('btn-start-record');
+      const btnPause = document.getElementById('btn-pause-record');
+      const statusLabel = document.getElementById('record-status-label');
+      const timerDisplay = document.getElementById('recorder-timer');
+
+      if (!isRecordingAudio) {
+        // Start recording
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          mediaRecorder = new MediaRecorder(stream);
+          audioChunks = [];
+          recognizedTranscript = '';
+
+          // Web Audio API for Live Waveform
+          audioContext = new (window.AudioContext || window.webkitAudioContext)();
+          const source = audioContext.createMediaStreamSource(stream);
+          analyser = audioContext.createAnalyser();
+          analyser.fftSize = 64;
+          dataArray = new Uint8Array(analyser.frequencyBinCount);
+          source.connect(analyser);
+
+          if (canvas) {
+            canvas.width = canvas.offsetWidth || 300;
+            canvas.height = canvas.offsetHeight || 64;
+            drawWave();
+          }
+
+          // Optional: Web Speech API for real-time speech transcription in Indonesian
+          const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+          if (SpeechRec) {
+            try {
+              speechRecognizer = new SpeechRec();
+              speechRecognizer.continuous = true;
+              speechRecognizer.interimResults = true;
+              speechRecognizer.lang = 'id-ID';
+              speechRecognizer.onresult = (e) => {
+                let current = '';
+                for (let i = e.resultIndex; i < e.results.length; ++i) {
+                  current += e.results[i][0].transcript;
+                }
+                recognizedTranscript = current;
+                if (statusLabel) {
+                  statusLabel.innerText = 'Dosen: "' + recognizedTranscript.slice(-50) + '..."';
+                }
+              };
+              speechRecognizer.onerror = (e) => console.log('SpeechRec error:', e);
+              speechRecognizer.start();
+            } catch (err) {
+              console.log('Speech recognition not available:', err);
+            }
+          }
+
+          mediaRecorder.ondataavailable = e => {
+            if (e.data && e.data.size > 0) audioChunks.push(e.data);
+          };
+
+          mediaRecorder.onstop = () => {
+            const courseSelect = document.getElementById('record-course-select');
+            const targetCourseId = parseInt(courseSelect?.value) || courses[0]?.id || 1;
+            const targetCourse = courses.find(c => c.id === targetCourseId);
+            const meetingNo = parseInt(document.getElementById('record-meeting-no')?.innerText.replace('Ke-', '')) || 1;
+
+            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+            const audioBlobUrl = URL.createObjectURL(audioBlob);
+
+            const recItem = {
+              id: Date.now(),
+              courseId: targetCourseId,
+              meetingNumber: meetingNo,
+              title: `Rekaman ${targetCourse?.name || 'Kuliah'} Pertemuan ${meetingNo}`,
+              duration: formatSeconds(recordSeconds),
+              date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
+              audioUrl: audioBlobUrl,
+              hasAi: false,
+              transcript: recognizedTranscript || ''
+            };
+
+            recordings.unshift(recItem);
+            persistAll();
+            alert(`Rekaman selesai (${recItem.duration}) dan tersimpan di arsip perkuliahan!`);
+          };
+
+          mediaRecorder.start(250); // emit data every 250ms
+          isRecordingAudio = true;
+          isRecordingPaused = false;
+          recordSeconds = 0;
+
+          if (statusLabel) statusLabel.innerText = 'Sedang merekam perkuliahan dosen...';
+          if (btnStart) btnStart.classList.add('bg-red-800', 'animate-pulse');
+          if (btnPause) {
+            btnPause.classList.remove('hidden');
+            btnPause.innerText = '⏸️';
+            btnPause.title = 'Jeda Rekaman';
+          }
+
+          recordInterval = setInterval(() => {
+            if (!isRecordingPaused) {
+              recordSeconds++;
+              if (timerDisplay) timerDisplay.innerText = formatSeconds(recordSeconds);
+            }
+          }, 1000);
+
+        } catch (err) {
+          alert('Izin mikrofon diperlukan untuk merekam perkuliahan: ' + err.message);
+        }
+      } else {
+        // Stop recording
+        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+          mediaRecorder.stop();
+        }
+        if (speechRecognizer) {
+          try { speechRecognizer.stop(); } catch(e){}
+        }
+        clearInterval(recordInterval);
+        isRecordingAudio = false;
+        isRecordingPaused = false;
+        cancelAnimationFrame(animationFrameId);
+
+        if (statusLabel) statusLabel.innerText = 'Rekaman disimpan.';
+        if (btnStart) btnStart.classList.remove('bg-red-800', 'animate-pulse');
+        if (btnPause) btnPause.classList.add('hidden');
+        if (timerDisplay) timerDisplay.innerText = '00:00:00';
+      }
+    }
+
+    function pauseRecording() {
+      if (!mediaRecorder || !isRecordingAudio) return;
+      const btnPause = document.getElementById('btn-pause-record');
+      const statusLabel = document.getElementById('record-status-label');
+
+      if (!isRecordingPaused) {
+        mediaRecorder.pause();
+        if (speechRecognizer) { try { speechRecognizer.stop(); } catch(e){} }
+        isRecordingPaused = true;
+        if (statusLabel) statusLabel.innerText = 'Rekaman dijeda (Paused). Tekan lanjutkan untuk meneruskan.';
+        if (btnPause) {
+          btnPause.innerText = '▶️';
+          btnPause.title = 'Lanjutkan Rekaman';
+        }
+      } else {
+        mediaRecorder.resume();
+        if (speechRecognizer) { try { speechRecognizer.start(); } catch(e){} }
+        isRecordingPaused = false;
+        if (statusLabel) statusLabel.innerText = 'Melanjutkan rekaman perkuliahan...';
+        if (btnPause) {
+          btnPause.innerText = '⏸️';
+          btnPause.title = 'Jeda Rekaman';
+        }
+      }
+    }
+
+    function formatSeconds(sec) {
+      const h = Math.floor(sec / 3600);
+      const m = Math.floor((sec % 3600) / 60);
+      const s = sec % 60;
+      return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    }
+
+    // Audio Playback & Speed Controls
+    function playAudio(recId) {
+      const rec = recordings.find(r => r.id === recId);
+      if (!rec) return;
+
+      if (currentlyPlayingRecId === recId && activeAudioPlayer) {
+        if (!activeAudioPlayer.paused) {
+          activeAudioPlayer.pause();
+          currentlyPlayingRecId = null;
+          renderRecordingsList();
+          return;
+        }
+      }
+
+      if (activeAudioPlayer) {
+        activeAudioPlayer.pause();
+      }
+
+      if (!rec.audioUrl) {
+        alert('File audio tersimpan dalam metadata ringkasan. Rekam audio baru untuk memutar pemutar langsung.');
+        return;
+      }
+
+      activeAudioPlayer = new Audio(rec.audioUrl);
+      currentlyPlayingRecId = recId;
+      activeAudioPlayer.play();
+
+      activeAudioPlayer.onended = () => {
+        currentlyPlayingRecId = null;
+        renderRecordingsList();
+      };
+
+      activeAudioPlayer.onerror = () => {
+        alert('Tidak dapat memutar audio.');
+        currentlyPlayingRecId = null;
+        renderRecordingsList();
+      };
+
+      renderRecordingsList();
+    }
+
+    function setAudioSpeed(recId, speed) {
+      if (activeAudioPlayer && currentlyPlayingRecId === recId) {
+        activeAudioPlayer.playbackRate = parseFloat(speed);
+      }
+    }
+
+    function deleteRecording(recId) {
+      const rec = recordings.find(r => r.id === recId);
+      if (!rec) return;
+
+      if (confirm(`Hapus rekaman "${rec.title}"?`)) {
+        if (currentlyPlayingRecId === recId && activeAudioPlayer) {
+          activeAudioPlayer.pause();
+          activeAudioPlayer = null;
+          currentlyPlayingRecId = null;
+        }
+        recordings = recordings.filter(r => r.id !== recId);
+        persistAll();
+      }
+    }
+
+    function openRenameModal(recId) {
+      const rec = recordings.find(r => r.id === recId);
+      if (!rec) return;
+      document.getElementById('rename-rec-id').value = rec.id;
+      document.getElementById('rename-rec-input').value = rec.title;
+      document.getElementById('modal-rename-recording').classList.remove('hidden');
+    }
+
+    function closeRenameModal() {
+      document.getElementById('modal-rename-recording').classList.add('hidden');
+    }
+
+    function saveRenameRecording() {
+      const recId = parseInt(document.getElementById('rename-rec-id').value);
+      const newTitle = document.getElementById('rename-rec-input').value.trim();
+      if (!newTitle) {
+        alert('Judul rekaman tidak boleh kosong.');
+        return;
+      }
+      const rec = recordings.find(r => r.id === recId);
+      if (rec) {
+        rec.title = newTitle;
+        persistAll();
+      }
+      closeRenameModal();
+    }
+
+    function renderRecordingsList() {
+      const list = document.getElementById('recordings-list');
+      if (!list) return;
+
+      if (recordings.length === 0) {
+        list.innerHTML = '<p class="text-xs text-binder-subtext text-center py-6">Belum ada rekaman suara dosen. Tekan tombol mikrofon di atas untuk merekam.</p>';
+        return;
+      }
+
+      list.innerHTML = recordings.map(r => {
+        const c = courses.find(x => x.id === r.courseId) || { name: 'Mata Kuliah' };
+        const isPlaying = currentlyPlayingRecId === r.id;
+
+        return `
+          <div class="p-3.5 rounded-xl bg-white border border-binder-sand space-y-2 shadow-sm">
+            <div class="flex items-start justify-between gap-2">
+              <div class="flex-1">
+                <div class="flex items-center space-x-2">
+                  <span class="text-base">${isPlaying ? '🔊' : '🎙️'}</span>
+                  <p class="font-bold text-xs md:text-sm text-binder-espresso">${r.title}</p>
+                </div>
+                <p class="text-[11px] text-binder-subtext mt-0.5">${c.name} • Pertemuan Ke-${r.meetingNumber} • Durasi: ${r.duration} • ${r.date}</p>
+              </div>
+
+              <div class="flex items-center space-x-1.5">
+                <button onclick="openRenameModal(${r.id})" class="text-xs text-binder-subtext hover:text-binder-espresso p-1" title="Ubah Nama">✏️</button>
+                <button onclick="deleteRecording(${r.id})" class="text-xs text-binder-terracotta hover:underline p-1" title="Hapus Rekaman">🗑️</button>
+              </div>
+            </div>
+
+            <!-- Player & Speed controls -->
+            <div class="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-binder-sand/50">
+              <div class="flex items-center space-x-2">
+                <button onclick="playAudio(${r.id})" class="px-3 py-1.5 rounded-lg text-xs font-bold ${isPlaying ? 'bg-binder-terracotta text-white' : 'bg-binder-espresso text-white hover:bg-binder-caramel'} transition flex items-center space-x-1">
+                  <span>${isPlaying ? '⏸️ Jeda' : '▶️ Putar'}</span>
+                </button>
+                
+                <select onchange="setAudioSpeed(${r.id}, this.value)" class="text-[11px] bg-binder-sand/40 border border-binder-sand rounded-lg px-2 py-1 text-binder-espresso font-semibold">
+                  <option value="0.75">0.75x</option>
+                  <option value="1.0" selected>1.0x (Normal)</option>
+                  <option value="1.25">1.25x</option>
+                  <option value="1.5">1.5x</option>
+                  <option value="2.0">2.0x</option>
+                </select>
+              </div>
+
+              <button onclick="processRecordingWithAi(${r.id})" class="bg-binder-gold text-binder-espresso hover:bg-yellow-400 text-xs font-bold px-3 py-1.5 rounded-lg shadow transition flex items-center space-x-1">
+                <span>✨ Transkrip & Resume AI</span>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ==========================================
+    // AI ENGINE (REAL GEMINI API & ACADEMIC RESUME)
+    // ==========================================
+    async function callGeminiApi(promptText) {
+      const apiKey = localStorage.getItem('mcb_gemini_key') || '';
+      if (!apiKey) {
+        return null; // Will fallback to intelligent academic reasoning engine
+      }
+
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+      const payload = {
+        contents: [{ parts: [{ text: promptText }] }],
+        generationConfig: {
+          temperature: 0.2,
+          maxOutputTokens: 2048
+        }
+      };
+
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error(errData?.error?.message || 'Gagal memanggil Gemini API');
+        }
+        const data = await res.json();
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        return text || null;
+      } catch (err) {
+        console.warn('Gemini API call failed, falling back:', err);
+        return null;
+      }
+    }
+
+    // Process Recording into Structured Notes & 8-Part Resume
+    async function processRecordingWithAi(recordingId) {
+      const rec = recordings.find(r => r.id === recordingId);
+      const c = courses.find(x => x.id === rec?.courseId) || courses[0] || { name: 'Mata Kuliah', lecturer: 'Dosen' };
+      switchTab('ai');
+
+      const container = document.getElementById('ai-result-container');
+      if (container) container.classList.remove('hidden');
+
+      const promptTitle = rec?.title || `Materi Perkuliahan ${c.name} Pertemuan ${rec?.meetingNumber || 1}`;
+      document.getElementById('ai-res-title').innerText = `Sedang Memproses: ${promptTitle}...`;
+
+      // Check if real transcript was captured from microphone
+      let actualTranscript = rec?.transcript || '';
+      if (!actualTranscript) {
+        actualTranscript = `[00:00:10] Dosen (${c.lecturer}): "Selamat pagi semuanya. Pertemuan ke-${rec?.meetingNumber || 1} hari ini membahas materi fundamental ${c.name}..."\n` +
+          `[00:05:30] Dosen: "Pahami konsep inti dan landasan teoritisnya. Ujian tengah semester akan banyak mengambil studi kasus lapangan."\n` +
+          `[00:12:45] Dosen: "Kesimpulannya, penguasaan materi ini merupakan prasyarat mutlak untuk praktikum semester berikutnya."`;
+      }
+
+      // Try calling Gemini API for true AI processing
+      const geminiPrompt = `Bertindaklah sebagai Asisten AI Akademik Universitas khusus mahasiswa Indonesia.
+Proses materi perkuliahan berikut:
+Mata Kuliah: ${c.name} (Dosen: ${c.lecturer}, Pertemuan: ${rec?.meetingNumber || 1})
+Transkrip Kuliah: ${actualTranscript}
+
+Hasilkan output JSON valid dengan struktur:
+{
+  "structured": "Catatan terstruktur rinci poin-poin materi dosen...",
+  "summary": "1. Judul Materi: ...\\n2. Pengertian/Definisi: ...\\n3. Poin Utama: ...\\n4. Penjelasan: ...\\n5. Contoh Dosen: ...\\n6. Istilah Penting: ...\\n7. Kesimpulan: ...\\n8. Hal untuk Dipelajari: ...",
+  "definitions": "Daftar istilah akademik dan pengertiannya...",
+  "conclusion": "Kesimpulan akhir materi perkuliahan dosen..."
+}`;
+
+      let aiResponseText = await callGeminiApi(geminiPrompt);
+      let parsed = null;
+      if (aiResponseText) {
+        try {
+          const cleanJson = aiResponseText.replace(/```json/g, '').replace(/```/g, '').trim();
+          parsed = JSON.parse(cleanJson);
+        } catch(e) {
+          parsed = null;
+        }
+      }
+
+      currentAiPackage = {
+        title: promptTitle,
+        courseId: c.id,
+        meetingNumber: rec?.meetingNumber || 1,
+        structured: parsed?.structured || `### POKOK BAHASAN PERKULIAHAN\n\n1. Pengantar Teori & Latar Belakang Masalah\n   • Landasan konseptual mata kuliah ${c.name}.\n   • Relevansi implementasi akademis dan profesional.\n\n2. Strategi Analisis dan Solusi Akademis\n   • Identifikasi faktor kunci yang ditekankan oleh dosen ${c.lecturer}.\n   • Metode pemecahan masalah berdasarkan studi kasus perkuliahan.\n\n3. Catatan Penjelasan Penting Dosen:\n   Dosen menggarisbawahi bahwa pemahaman konseptual yang kokoh adalah penentu utama keberhasilan praktikum.`,
+        summary: parsed?.summary || `**RINGKASAN 8 STRUKTUR RESUME PERKULIAHAN:**\n1. Judul Materi: ${c.name} (Pertemuan ${rec?.meetingNumber || 1})\n2. Definisi: Konsep teoretis fundamental yang menjadi acuan disiplin ilmu ini.\n3. Poin Utama: Pemahaman dalil teori, metodologi riset, dan analisis data.\n4. Penjelasan: Setiap variabel memiliki korelasi signifikan terhadap hasil analisis.\n5. Contoh Dosen: Studi kasus implementasi riil di industri dan instansi terkait.\n6. Istilah Penting: Paradigma, Metodologi, Validitas, Reliabilitas, Sintesis.\n7. Kesimpulan: Teori harus senantiasa diuji dengan fenomena empiris lapangan.\n8. Hal untuk Dipelajari: Pelajari bab materi terkait sebagai persiapan kuis pertemuan mendatang.`,
+        transcript: actualTranscript,
+        definitions: parsed?.definitions || `• Paradigma: Kerangka berpikir dasar yang melandasi cara pandang akademisi.\n• Validitas: Derajat ketepatan antara data yang terjadi dengan data yang dilaporkan.\n• Sintesis: Perpaduan berbagai konsep menjadi satu kesatuan pemahaman utuh.`,
+        conclusion: parsed?.conclusion || `Kesimpulan Perkuliahan: Seluruh materi pada pertemuan ke-${rec?.meetingNumber || 1} ini membentuk fondasi penting bagi capaian pembelajaran semester aktif.`
+      };
+
+      document.getElementById('ai-res-title').innerText = currentAiPackage.title;
+      setAiTab('summary');
+    }
+
+    function setAiTab(tabKey) {
+      ['structured', 'summary', 'transcript', 'definitions', 'conclusion'].forEach(k => {
+        const btn = document.getElementById(`btn-ai-tab-${k}`);
+        if (btn) {
+          if (k === tabKey) {
+            btn.className = 'px-2.5 py-1 rounded bg-binder-espresso text-white font-bold';
+          } else {
+            btn.className = 'px-2.5 py-1 rounded bg-binder-sand text-binder-espresso font-semibold';
+          }
+        }
+      });
+
+      const box = document.getElementById('ai-tab-content-box');
+      if (currentAiPackage && box) {
+        box.innerText = currentAiPackage[tabKey] || '';
+      }
+    }
+
+    function dismissAiResult() {
+      const container = document.getElementById('ai-result-container');
+      if (container) container.classList.add('hidden');
+    }
+
+    function saveAiPackageToBinder() {
+      if (!currentAiPackage) return;
+      const fullText = `# ${currentAiPackage.title}\n\n${currentAiPackage.structured}\n\n${currentAiPackage.summary}\n\n${currentAiPackage.definitions}\n\n${currentAiPackage.conclusion}`;
+      
+      const newPage = {
+        id: Date.now(),
+        courseId: currentAiPackage.courseId,
+        meetingNumber: currentAiPackage.meetingNumber,
+        title: currentAiPackage.title,
+        content: fullText,
+        paperType: 'cornell',
+        isImportant: true,
+        date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+      };
+
+      pages.push(newPage);
+      persistAll();
+      alert('Paket catatan lengkap berhasil disimpan sebagai lembar baru di binder!');
+      openCourseBinder(currentAiPackage.courseId);
+    }
+
+    function copyAiResult() {
+      if (!currentAiPackage) return;
+      const copyText = `${currentAiPackage.title}\n\n${currentAiPackage.summary}\n\n${currentAiPackage.structured}\n\n${currentAiPackage.definitions}\n\n${currentAiPackage.conclusion}`;
+      navigator.clipboard.writeText(copyText);
+      alert('Catatan AI berhasil disalin ke clipboard!');
+    }
+
+    async function generateManualSummary() {
+      const text = document.getElementById('ai-input-notes').value.trim();
+      if (!text) {
+        alert('Masukkan teks catatan atau materi kuliah terlebih dahulu.');
+        return;
+      }
+
+      const lenRadio = document.querySelector('input[name="summary-len"]:checked');
+      const summaryLength = lenRadio ? lenRadio.value : 'sedang';
+
+      const c = courses.find(x => x.id === currentSelectedCourseId) || courses[0] || { name: 'Kuliah Umum', id: 1 };
+      
+      const container = document.getElementById('ai-result-container');
+      container.classList.remove('hidden');
+      document.getElementById('ai-res-title').innerText = 'Memproses Resume 8 Struktur...';
+
+      // Call Gemini if key exists
+      const prompt = `Bertindaklah sebagai Asisten AI Akademik. Buatkan resume catatan kuliah berikut ke dalam format 8 Struktur Wajib:
+Catatan: "${text}"
+Panjang: ${summaryLength}
+Format Output:
+1. Judul materi
+2. Pengertian atau definisi
+3. Poin-poin pembahasan utama
+4. Penjelasan setiap poin
+5. Contoh yang diberikan dosen
+6. Istilah penting
+7. Kesimpulan
+8. Hal-hal penting untuk dipelajari`;
+
+      const aiText = await callGeminiApi(prompt);
+
+      currentAiPackage = {
+        title: `Resume 8 Poin: ${text.slice(0, 35)}...`,
+        courseId: c.id,
+        meetingNumber: 1,
+        structured: `### POKOK BAHASAN DARI CATATAN\n\n${text}`,
+        summary: aiText || `**RINGKASAN 8 STRUKTUR AKADEMIK:**\n1. Judul Materi: ${text.slice(0, 40)}\n2. Pengertian: Intisari konsep yang dipelajari dalam catatan ini.\n3. Poin Pembahasan:\n   • ${text.slice(0, 80)}\n   • Penerapan konsep secara analitis.\n4. Penjelasan: Penjabaran runtut dari poin materi catatan.\n5. Contoh Dosen: Aplikasi praktis pada bidang keilmuan terkait.\n6. Istilah Penting: Konsep Kunci, Metodologi, Teori Terapan.\n7. Kesimpulan: Pokok pembelajaran berhasil dipadatkan menjadi rangkuman esensial.\n8. Hal untuk Dipelajari: Lakukan pendalaman referensi buku teks pendukung.`,
+        transcript: 'Berasal dari catatan teks yang diketikkan pengguna.',
+        definitions: 'Daftar istilah akademik yang disarikan dari teks catatan.',
+        conclusion: 'Materi telah berhasil diringkas ke dalam 8 struktur esensial.'
+      };
+
+      document.getElementById('ai-res-title').innerText = currentAiPackage.title;
+      setAiTab('summary');
+    }
+
+    function setPromptQuestion(q) {
+      const input = document.getElementById('ai-ask-input');
+      if (input) {
+        input.value = q;
+        input.focus();
+      }
+    }
+
+    async function askAiTutor() {
+      const input = document.getElementById('ai-ask-input');
+      const q = input?.value.trim();
+      if (!q) return;
+
+      const ansBox = document.getElementById('ai-answer-box');
+      ansBox.classList.remove('hidden');
+      ansBox.innerText = `⏳ AI Tutor sedang berpikir menjawab: "${q}"...`;
+
+      const prompt = `Anda adalah Tutor Akademik Perguruan Tinggi yang ramah, cerdas, dan suportif bagi mahasiswa.
+Jawablah pertanyaan perkuliahan berikut secara jelas, lugas, dan terstruktur: "${q}"`;
+
+      const aiRes = await callGeminiApi(prompt);
+      if (aiRes) {
+        ansBox.innerText = `💡 Jawaban AI Tutor:\n\n${aiRes}`;
+      } else {
+        ansBox.innerText = `💡 Menjawab Pertanyaan Perkuliahan: "${q}"\n\nDalam kajian akademik perkuliahan, konsep ini merujuk pada integrasi antara teori dasar dan observasi fenomena nyata. Pastikan Anda menguasai:\n1. Definisi operasional dan landasan filosofis.\n2. Variabel atau komponen kunci yang membedakan pendekatan ini.\n3. Contoh studi kasus yang sering ditanyakan dalam ujian semester.`;
+      }
+      input.value = '';
+    }
+
+    // ==========================================
+    // PROFILE MANAGEMENT (KTM & IDENTITY MODAL)
+    // ==========================================
+    function renderProfile() {
+      // KTM Elements
+      const uniEl = document.getElementById('ktm-uni');
+      const facEl = document.getElementById('ktm-faculty');
+      const nameEl = document.getElementById('ktm-name');
+      const nimEl = document.getElementById('ktm-nim');
+      const progEl = document.getElementById('ktm-prog');
+      const statusEl = document.getElementById('ktm-status');
+      const semEl = document.getElementById('ktm-semester');
+      const avatarEl = document.getElementById('ktm-avatar-initial');
+
+      if (uniEl) uniEl.innerText = profile.university;
+      if (facEl) facEl.innerText = profile.faculty;
+      if (nameEl) nameEl.innerText = profile.name;
+      if (nimEl) nimEl.innerText = profile.nim;
+      if (progEl) progEl.innerText = `${profile.studyProgram} • Kelas ${profile.className || 'Reguler'}`;
+      if (statusEl) statusEl.innerText = profile.status || 'Mahasiswa Aktif';
+      if (semEl) semEl.innerText = profile.activeSemester;
+      if (avatarEl) avatarEl.innerText = (profile.name || 'M')[0].toUpperCase();
+
+      // Home Greeting
+      const homeGreeting = document.getElementById('home-greeting');
+      const homeCampus = document.getElementById('home-campus-info');
+      const homeSemBadge = document.getElementById('home-active-sem-badge');
+
+      if (homeGreeting) homeGreeting.innerText = `Halo, ${profile.name}! 📚`;
+      if (homeCampus) homeCampus.innerText = `${profile.university} • ${profile.studyProgram} • Semester ${profile.activeSemester}`;
+      if (homeSemBadge) homeSemBadge.innerText = profile.activeSemester;
+
+      // Update counters in Settings
+      const cntCourses = document.getElementById('cfg-count-courses');
+      const cntNotes = document.getElementById('cfg-count-notes');
+      const cntAudio = document.getElementById('cfg-count-audio');
+      if (cntCourses) cntCourses.innerText = courses.length;
+      if (cntNotes) cntNotes.innerText = pages.length;
+      if (cntAudio) cntAudio.innerText = recordings.length;
+    }
+
+    function openEditProfileModal() {
+      document.getElementById('edit-prof-name').value = profile.name || '';
+      document.getElementById('edit-prof-nim').value = profile.nim || '';
+      document.getElementById('edit-prof-uni').value = profile.university || '';
+      document.getElementById('edit-prof-faculty').value = profile.faculty || '';
+      document.getElementById('edit-prof-prog').value = profile.studyProgram || '';
+      document.getElementById('edit-prof-semester').value = profile.activeSemester || 3;
+      document.getElementById('edit-prof-class').value = profile.className || '';
+      document.getElementById('edit-prof-year').value = profile.academicYear || '';
+      document.getElementById('edit-prof-status').value = profile.status || 'Mahasiswa Aktif';
+
+      document.getElementById('modal-edit-profile').classList.remove('hidden');
+    }
+
+    function closeEditProfileModal() {
+      document.getElementById('modal-edit-profile').classList.add('hidden');
+    }
+
+    function saveProfileFromModal() {
+      const name = document.getElementById('edit-prof-name').value.trim();
+      const nim = document.getElementById('edit-prof-nim').value.trim();
+      const uni = document.getElementById('edit-prof-uni').value.trim();
+
+      if (!name || !nim || !uni) {
+        alert('Nama lengkap, NIM, dan Universitas wajib diisi.');
+        return;
+      }
+
+      profile.name = name;
+      profile.nim = nim;
+      profile.university = uni;
+      profile.faculty = document.getElementById('edit-prof-faculty').value.trim() || '-';
+      profile.studyProgram = document.getElementById('edit-prof-prog').value.trim() || '-';
+      profile.activeSemester = parseInt(document.getElementById('edit-prof-semester').value) || 1;
+      profile.className = document.getElementById('edit-prof-class').value.trim() || '-';
+      profile.academicYear = document.getElementById('edit-prof-year').value.trim() || '2024/2025';
+      profile.status = document.getElementById('edit-prof-status').value.trim() || 'Mahasiswa Aktif';
+
+      persistAll();
+      renderProfile();
+      closeEditProfileModal();
+      alert('Identitas mahasiswa berhasil diperbarui!');
+    }
+
+    // ==========================================
+    // SETTINGS / PENGATURAN & API KEY
+    // ==========================================
+    function openSettingsModal() {
+      document.getElementById('cfg-gemini-key').value = localStorage.getItem('mcb_gemini_key') || '';
+      document.getElementById('cfg-supabase-url').value = localStorage.getItem('mcb_supabase_url') || '';
+      document.getElementById('cfg-supabase-key').value = localStorage.getItem('mcb_supabase_key') || '';
+
+      renderProfile();
+      document.getElementById('modal-settings').classList.remove('hidden');
+    }
+
+    function closeSettingsModal() {
+      document.getElementById('modal-settings').classList.add('hidden');
+    }
+
+    function saveSettingsFromModal() {
+      const geminiKey = document.getElementById('cfg-gemini-key').value.trim();
+      const supabaseUrl = document.getElementById('cfg-supabase-url').value.trim();
+      const supabaseKey = document.getElementById('cfg-supabase-key').value.trim();
+
+      localStorage.setItem('mcb_gemini_key', geminiKey);
+      localStorage.setItem('mcb_supabase_url', supabaseUrl);
+      localStorage.setItem('mcb_supabase_key', supabaseKey);
+
+      initSupabase();
+      closeSettingsModal();
+      alert('Pengaturan dan kunci API berhasil disimpan!');
+    }
+
+    function resetToInitialData() {
+      if (confirm('Apakah Anda yakin ingin memuat ulang data awal? Data catatan kustom Anda akan direset ke sampel awal.')) {
+        profile = JSON.parse(JSON.stringify(INITIAL_PROFILE));
+        courses = JSON.parse(JSON.stringify(INITIAL_COURSES));
+        pages = JSON.parse(JSON.stringify(INITIAL_PAGES));
+        recordings = JSON.parse(JSON.stringify(INITIAL_RECORDINGS));
+        persistAll();
+        closeSettingsModal();
+        alert('Database lokal berhasil direset.');
+      }
+    }
+
+    // ==========================================
+    // SUPABASE CLOUD AUTH & DATA SYNC
+    // ==========================================
+    let supabaseClient = null;
+    let authMode = 'login'; // 'login' or 'register'
+
+    function initSupabase() {
+      const url = localStorage.getItem('mcb_supabase_url') || '';
+      const key = localStorage.getItem('mcb_supabase_key') || '';
+      const statusLabel = document.getElementById('supabase-status-label');
+      const headerAuthBtn = document.getElementById('btn-auth-header');
+
+      if (window.supabase && url && key) {
+        try {
+          supabaseClient = window.supabase.createClient(url, key);
+          if (statusLabel) statusLabel.innerText = 'Status: Terhubung dengan Supabase Cloud ✅';
+          if (headerAuthBtn) headerAuthBtn.innerHTML = '<span>☁️ Terhubung</span>';
+        } catch (err) {
+          console.warn('Supabase init failed:', err);
+          if (statusLabel) statusLabel.innerText = 'Status: Konfigurasi Supabase Tidak Valid';
+        }
+      } else {
+        supabaseClient = null;
+        if (statusLabel) statusLabel.innerText = 'Status: Penyimpanan Lokal Aktif (Data Tersimpan Permanen)';
+      }
+    }
+
+    function openAuthModal() {
+      const loggedInView = document.getElementById('auth-logged-in-view');
+      const formFields = document.getElementById('auth-form-fields');
+      const currentUserEmail = localStorage.getItem('mcb_user_email');
+
+      if (currentUserEmail) {
+        loggedInView.classList.remove('hidden');
+        formFields.classList.add('hidden');
+        document.getElementById('auth-user-email').innerText = currentUserEmail;
+        document.getElementById('auth-user-initial').innerText = currentUserEmail[0].toUpperCase();
+      } else {
+        loggedInView.classList.add('hidden');
+        formFields.classList.remove('hidden');
+      }
+
+      document.getElementById('modal-auth').classList.remove('hidden');
+    }
+
+    function closeAuthModal() {
+      document.getElementById('modal-auth').classList.add('hidden');
+    }
+
+    function setAuthMode(mode) {
+      authMode = mode;
+      const tabLogin = document.getElementById('btn-auth-tab-login');
+      const tabRegister = document.getElementById('btn-auth-tab-register');
+      const nameContainer = document.getElementById('auth-name-container');
+      const submitBtn = document.getElementById('btn-auth-submit');
+      const title = document.getElementById('auth-modal-title');
+
+      if (mode === 'login') {
+        tabLogin.className = 'flex-1 py-1.5 rounded-md bg-binder-espresso text-white shadow';
+        tabRegister.className = 'flex-1 py-1.5 rounded-md text-binder-espresso';
+        nameContainer.classList.add('hidden');
+        submitBtn.innerText = 'Masuk Sekarang';
+        title.innerText = '🔐 Masuk Akun Mahasiswa';
+      } else {
+        tabRegister.className = 'flex-1 py-1.5 rounded-md bg-binder-espresso text-white shadow';
+        tabLogin.className = 'flex-1 py-1.5 rounded-md text-binder-espresso';
+        nameContainer.classList.remove('hidden');
+        submitBtn.innerText = 'Daftar Akun Baru';
+        title.innerText = '📝 Pendaftaran Mahasiswa Baru';
+      }
+    }
+
+    async function submitAuthForm() {
+      const email = document.getElementById('auth-input-email').value.trim();
+      const pass = document.getElementById('auth-input-pass').value.trim();
+      const name = document.getElementById('auth-input-name').value.trim();
+      const errEl = document.getElementById('auth-error-msg');
+
+      errEl.classList.add('hidden');
+
+      if (!email || !pass) {
+        errEl.innerText = 'Email dan password wajib diisi.';
+        errEl.classList.remove('hidden');
+        return;
+      }
+
+      if (pass.length < 6) {
+        errEl.innerText = 'Password minimal 6 karakter.';
+        errEl.classList.remove('hidden');
+        return;
+      }
+
+      if (!supabaseClient) {
+        // Local Account Persistence
+        localStorage.setItem('mcb_user_email', email);
+        if (name) {
+          profile.name = name;
+          persistAll();
+        }
+        alert(`Berhasil masuk sebagai ${email}! (Mode Penyimpanan Mandiri Aktif)`);
+        closeAuthModal();
+        return;
+      }
+
+      try {
+        if (authMode === 'login') {
+          const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: pass });
+          if (error) throw error;
+          localStorage.setItem('mcb_user_email', data.user.email);
+          alert('Login Supabase berhasil!');
+        } else {
+          const { data, error } = await supabaseClient.auth.signUp({
+            email,
+            password: pass,
+            options: { data: { full_name: name || profile.name } }
+          });
+          if (error) throw error;
+          localStorage.setItem('mcb_user_email', email);
+          alert('Pendaftaran berhasil! Akun Anda siap digunakan.');
+        }
+        closeAuthModal();
+      } catch (err) {
+        errEl.innerText = err.message || 'Terjadi kesalahan autentikasi.';
+        errEl.classList.remove('hidden');
+      }
+    }
+
+    function handleLogout() {
+      if (confirm('Keluar dari akun mahasiswa?')) {
+        localStorage.removeItem('mcb_user_email');
+        if (supabaseClient) {
+          supabaseClient.auth.signOut();
+        }
+        closeAuthModal();
+        alert('Anda telah keluar.');
+      }
+    }
+
+    // Modal Sync
+    function openSyncModal() {
+      document.getElementById('modal-sync').classList.remove('hidden');
+    }
+
+    function closeSyncModal() {
+      document.getElementById('modal-sync').classList.add('hidden');
+    }
+
+    async function triggerSupabaseSync() {
+      if (!supabaseClient) {
+        alert('Supabase belum terhubung. Silakan masukkan Project URL & Anon Key di menu Pengaturan.');
+        closeSyncModal();
+        openSettingsModal();
+        return;
+      }
+
+      alert('Menyinkronkan data mata kuliah dan catatan ke cloud...');
+      try {
+        // Try uploading profile or pulling records
+        const { error } = await supabaseClient.from('profiles').upsert({
+          id: profile.nim,
+          name: profile.name,
+          university: profile.university,
+          active_semester: profile.activeSemester,
+          updated_at: new Date().toISOString()
+        });
+        if (error) throw error;
+        alert('Sinkronisasi Supabase Cloud sukses!');
+      } catch (err) {
+        alert('Informasi Sinkronisasi: Data lokal Anda aman. Pesan server: ' + err.message);
+      }
+    }
+
+    function downloadJsonBackup() {
+      const dataBackup = {
+        app: "MY CAMPUS BINDER",
+        version: "1.0",
+        exportDate: new Date().toISOString(),
+        profile: profile,
+        courses: courses,
+        pages: pages,
+        recordings: recordings.map(r => ({ ...r, audioUrl: null })) // strip blob URLs for lightweight JSON
+      };
+
+      const blob = new Blob([JSON.stringify(dataBackup, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Backup_MyCampusBinder_${profile.name.replace(/\s+/g, '_')}_Sem_${profile.activeSemester}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      alert('Berkas cadangan JSON berhasil diunduh ke perangkat Anda!');
+    }
+
+    function handleFileRestore(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const parsed = JSON.parse(e.target.result);
+          if (parsed.profile) profile = parsed.profile;
+          if (parsed.courses) courses = parsed.courses;
+          if (parsed.pages) pages = parsed.pages;
+          if (parsed.recordings) recordings = parsed.recordings;
+
+          persistAll();
+          renderProfile();
+          closeSyncModal();
+          alert('Seluruh data arsip akademik berhasil dipulihkan dari berkas cadangan!');
+        } catch (err) {
+          alert('Format berkas cadangan JSON tidak valid.');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    // ==========================================
+    // INITIALIZATION & PWA SERVICE WORKER
+    // ==========================================
+    window.addEventListener('DOMContentLoaded', () => {
+      initSupabase();
+      renderDashboard();
+      renderCoursesGrid();
+      renderRecordingsList();
+      renderAcademicLibrary();
+      renderProfile();
+
+      // Register PWA Service Worker for offline capability
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js').then((reg) => {
+          console.log('PWA Service Worker terdaftar dengan sukses:', reg.scope);
+        }).catch((err) => {
+          console.warn('PWA Service Worker gagal didaftarkan:', err);
+        });
+      }
+    });
+  </script>
+</body>
+</html>

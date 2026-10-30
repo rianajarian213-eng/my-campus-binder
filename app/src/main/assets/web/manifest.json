@@ -1,0 +1,17 @@
+{
+  "name": "MY CAMPUS BINDER",
+  "short_name": "Campus Binder",
+  "description": "Aplikasi Binder Kuliah Digital Khusus Mahasiswa Berbasis AI & Arsip Seumur Kuliah",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#FBF8F2",
+  "theme_color": "#4A3525",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "./campus_binder_icon.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}

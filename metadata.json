@@ -1,0 +1,6 @@
+{
+  "name": "My Campus Binder",
+  "description": "Aplikasi binder kuliah digital berbasis AI untuk mencatat, merekam suara dosen, transkripsi otomatis, dan merangkum materi perkuliahan.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
